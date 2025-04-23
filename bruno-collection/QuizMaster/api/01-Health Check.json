@@ -1,4 +1,4 @@
-{
+gir{
   "name": "Health Check",
   "desc": "Check if the Quiz Master API is running",
   "request": {
