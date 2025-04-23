@@ -6,7 +6,7 @@ packages = ["maven", "zip"]
 
 [deployment]
 deploymentTarget = "cloudrun"
-run = ["sh", "-c", "java -jar target/quizmaster.jar --server.port=7090 --server.address=0.0.0.0"]
+run = ["sh", "-c", "java -jar target/quizmaster.jar --server.port=5000 --server.address=0.0.0.0"]
 build = ["sh", "-c", "mvn clean install package -DskipTests"]
 
 [workflows]

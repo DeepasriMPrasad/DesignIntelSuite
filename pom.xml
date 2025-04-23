@@ -11,9 +11,9 @@
   </parent>
   
   <groupId>com.quizmaster</groupId>
-  <artifactId>quiz-master</artifactId>
+  <artifactId>quizmaster</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <packaging>war</packaging>
+  <packaging>jar</packaging>
   <name>Quiz Master API</name>
   <description>Spring Boot Quiz Master application with RESTful APIs</description>
   
