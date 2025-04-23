@@ -13,11 +13,18 @@ st.set_page_config(
 )
 
 # Set fixed API URL for the local server
-API_BASE_URL = "http://localhost:8000/quizmaster/api/quiz"
+API_BASE_URL = "http://localhost:8080/quizmaster/api/quiz"
+SPRING_APP_URL = "http://localhost:8080/quizmaster"
 
 # Add debug info in sidebar
 st.sidebar.markdown("### Debug Information")
 st.sidebar.write(f"API URL: {API_BASE_URL}")
+
+# Add direct access button
+st.sidebar.markdown("### Direct Access")
+st.sidebar.markdown(f"You can access the Quiz Master application directly using the link below:")
+st.sidebar.markdown(f"[Access Quiz Master Web Interface]({SPRING_APP_URL})")
+st.sidebar.markdown("*Note: If you encounter any issues with the Streamlit interface, try accessing the application directly.*")
 
 # Function to check if API is available
 def is_api_available():
@@ -33,7 +40,7 @@ if is_api_available():
     st.sidebar.success("✅ API is available")
 else:
     st.sidebar.error("❌ API is not available")
-    st.sidebar.info("Make sure the Spring Boot application is running on port 8000")
+    st.sidebar.info("Make sure the Spring Boot application is running on port 8080")
 
 # Add a custom CSS style
 st.markdown("""
@@ -89,6 +96,27 @@ if 'final_score' not in st.session_state:
 # Header
 st.markdown("<h1 class='main-header'>Quiz Master</h1>", unsafe_allow_html=True)
 st.markdown("<p class='sub-header'>Test your knowledge with our interactive quiz!</p>", unsafe_allow_html=True)
+
+# Direct access banner in the main section
+if not is_api_available():
+    st.warning("⚠️ The Quiz Master API may not be accessible through Streamlit. Use the direct link below.")
+    st.markdown(f"""
+    ### Direct Access to Quiz Master
+    
+    For best results, access the Quiz Master application directly by clicking the button below:
+    
+    <a href='{SPRING_APP_URL}' target='_blank'>
+        <button style='background-color: #1E88E5; color: white; padding: 10px 24px; border-radius: 5px; border: none; font-size: 16px; cursor: pointer;'>
+            Access Quiz Master Web Interface
+        </button>
+    </a>
+    """, unsafe_allow_html=True)
+    st.markdown("""
+    ---
+    """)
+else:
+    st.info("🔗 Having trouble? You can also [access the Quiz Master interface directly](http://localhost:8080/quizmaster)")
+    st.markdown("<hr>", unsafe_allow_html=True)
 
 # Function to start a new quiz
 def start_new_quiz(user_name):
