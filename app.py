@@ -15,8 +15,8 @@ st.set_page_config(
 # Set fixed API URL for the external server with Replit-compatible URLs
 # Set fixed API URL for the external server with Replit-compatible URLs
 # Note: We're using port 5000 for the Spring Boot app (Quiz Master API)
-API_BASE_URL = "http://0.0.0.0:5000/api/quiz"
-SPRING_APP_URL = "http://0.0.0.0:5000"
+API_BASE_URL = "http://0.0.0.0:8080/api/quiz"
+SPRING_APP_URL = "http://0.0.0.0:8080"
 
 try:
     # Try to get Replit environment variables
