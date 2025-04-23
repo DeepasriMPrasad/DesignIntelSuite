@@ -5,11 +5,11 @@ channel = "stable-24_05"
 packages = ["maven"]
 
 [deployment]
-deploymentTarget = "autoscale"
+deploymentTarget = "gce"
 run = ["streamlit", "run", "app.py", "--server.port", "5000"]
 
 [workflows]
-runButton = "Project"
+runButton = "Quiz Master Application"
 
 [[workflows.workflow]]
 name = "Project"
