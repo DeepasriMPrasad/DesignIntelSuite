@@ -12,9 +12,26 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Set fixed API URL for the local server
-API_BASE_URL = "http://localhost:8080/quizmaster/api/quiz"
-SPRING_APP_URL = "http://localhost:8080/quizmaster"
+# Set fixed API URL for the external server with Replit-compatible URLs
+API_BASE_URL = "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/api/quiz"
+SPRING_APP_URL = "https://${REPL_SLUG}.${REPL_OWNER}.repl.co"
+
+# Fallback to localhost for local testing
+try:
+    import os
+    repl_slug = os.environ.get("REPL_SLUG", "")
+    repl_owner = os.environ.get("REPL_OWNER", "")
+    
+    if not repl_slug or not repl_owner:
+        API_BASE_URL = "http://localhost:5000/api/quiz"
+        SPRING_APP_URL = "http://localhost:5000"
+    else:
+        API_BASE_URL = f"https://{repl_slug}.{repl_owner}.repl.co/api/quiz"
+        SPRING_APP_URL = f"https://{repl_slug}.{repl_owner}.repl.co"
+except Exception as e:
+    st.sidebar.error(f"Error setting up URLs: {str(e)}")
+    API_BASE_URL = "http://localhost:5000/api/quiz"
+    SPRING_APP_URL = "http://localhost:5000"
 
 # Add debug info in sidebar
 st.sidebar.markdown("### Debug Information")
@@ -40,7 +57,7 @@ if is_api_available():
     st.sidebar.success("✅ API is available")
 else:
     st.sidebar.error("❌ API is not available")
-    st.sidebar.info("Make sure the Spring Boot application is running on port 8080")
+    st.sidebar.info("Make sure the Spring Boot application is running on port 5000")
 
 # Add a custom CSS style
 st.markdown("""
@@ -115,7 +132,7 @@ if not is_api_available():
     ---
     """)
 else:
-    st.info("🔗 Having trouble? You can also [access the Quiz Master interface directly](http://localhost:8080/quizmaster)")
+    st.info(f"🔗 Having trouble? You can also [access the Quiz Master interface directly]({SPRING_APP_URL})")
     st.markdown("<hr>", unsafe_allow_html=True)
 
 # Function to start a new quiz
@@ -311,3 +328,32 @@ else:
     if st.button("End Quiz"):
         end_quiz()
         st.rerun()
+        
+# Add detailed instructions for accessing the Spring Boot application
+st.markdown("""
+## 🔍 Troubleshooting Guide
+
+If you're having trouble accessing the Quiz Master application, try the following:
+
+1. **Access via URL**: The Spring Boot application is running on port 5000, which is directly accessible via Replit.
+   - You can access the Quiz Master application directly using Replit's URL (shown in your browser's address bar).
+   - The Quiz Master application should be available at the root URL.
+
+2. **Verify API Access**: Check if the API is available by clicking on the debug button below.
+
+3. **Browser Issues**: Try opening the application in an incognito/private browsing window or a different browser.
+
+4. **Refresh Spring Boot**: If needed, restart the Spring Boot application using Replit's workflow controls.
+""")
+
+# Add a debug button to test the API connection
+if st.button("Test Spring Boot API Connection"):
+    try:
+        response = requests.get(f"{SPRING_APP_URL}/api/quiz/health", timeout=5)
+        if response.status_code == 200:
+            st.success(f"✅ Successfully connected to Spring Boot API: {response.text}")
+        else:
+            st.error(f"⚠️ Connected but received error status: {response.status_code} - {response.text}")
+    except Exception as e:
+        st.error(f"❌ Failed to connect to Spring Boot API: {str(e)}")
+        st.info("Make sure the Spring Boot application is running on port 5000")

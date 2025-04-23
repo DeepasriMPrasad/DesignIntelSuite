@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.*;
 public class QuizController {
 
     private final QuizService quizService;
+    
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Quiz Master API is up and running!");
+    }
 
     @PostMapping("/start")
     public ResponseEntity<StartQuizResponse> startQuiz(@Valid @RequestBody StartQuizRequest request) {

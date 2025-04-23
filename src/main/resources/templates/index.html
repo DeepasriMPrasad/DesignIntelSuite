@@ -51,13 +51,13 @@
                 }
                 
                 // Create a new quiz session
-                axios.post('/quizmaster/api/quiz/start', {
+                axios.post('/api/quiz/start', {
                     userName: userName
                 })
                 .then(function(response) {
                     const sessionId = response.data.sessionId;
                     // Redirect to quiz page with session ID
-                    window.location.href = '/quizmaster/quiz?sessionId=' + sessionId;
+                    window.location.href = '/quiz?sessionId=' + sessionId;
                 })
                 .catch(function(error) {
                     console.error('Error starting quiz:', error);
