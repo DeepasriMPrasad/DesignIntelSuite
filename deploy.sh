@@ -1,17 +1,13 @@
+
 #!/bin/bash
 
-# Stop any running processes
-echo "Stopping any running processes..."
-pkill -f streamlit || true
-pkill -f java || true
-
-# Wait for ports to be released
-sleep 2
+# Ensure Java is in PATH
+export PATH=$PATH:/nix/var/nix/profiles/default/bin:/nix/store/*/bin
 
 # Build the WAR file
 echo "Building the WAR file..."
-mvn clean package
+mvn clean package -DskipTests
 
-# Start the Spring Boot application on port 5000
-echo "Starting Spring Boot application on port 5000..."
+# Start the Spring Boot application
+echo "Starting Spring Boot application..."
 java -jar target/quiz-master.war --server.port=5000 --server.address=0.0.0.0 --server.servlet.context-path=/quizmaster
