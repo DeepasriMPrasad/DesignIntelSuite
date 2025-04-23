@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Master</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card quiz-card mt-5">
+                    <div class="card-header text-center bg-primary text-white">
+                        <h1 class="display-5">Quiz Master</h1>
+                    </div>
+                    <div class="card-body">
+                        <div class="welcome-section text-center">
+                            <h2 class="mb-4">Welcome to Quiz Master!</h2>
+                            <p class="lead mb-4">Test your knowledge with our interactive quiz</p>
+                            
+                            <div class="name-form mt-5">
+                                <div class="form-group mb-3">
+                                    <label for="userName" class="form-label">Enter Your Name</label>
+                                    <input type="text" class="form-control form-control-lg" id="userName" placeholder="Your name">
+                                </div>
+                                <button id="startButton" class="btn btn-primary btn-lg w-100 mt-3">Start Quiz</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center text-muted">
+                        <p>Quiz Master &copy; 2025</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script th:src="@{/js/scripts.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start button event listener
+            document.getElementById('startButton').addEventListener('click', function() {
+                const userName = document.getElementById('userName').value.trim();
+                if (!userName) {
+                    alert('Please enter your name to start the quiz');
+                    return;
+                }
+                
+                // Create a new quiz session
+                axios.post('/quizmaster/api/quiz/start', {
+                    userName: userName
+                })
+                .then(function(response) {
+                    const sessionId = response.data.sessionId;
+                    // Redirect to quiz page with session ID
+                    window.location.href = '/quizmaster/quiz?sessionId=' + sessionId;
+                })
+                .catch(function(error) {
+                    console.error('Error starting quiz:', error);
+                    alert('Failed to start quiz. Please try again.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

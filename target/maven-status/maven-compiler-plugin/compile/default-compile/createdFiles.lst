@@ -17,6 +17,7 @@ com/quizmaster/model/dto/StartQuizRequest.class
 com/quizmaster/model/dto/ValidateAnswerResponse.class
 com/quizmaster/model/dto/StartQuizResponse$StartQuizResponseBuilder.class
 com/quizmaster/model/Question$QuestionBuilder.class
+com/quizmaster/controller/WebController.class
 com/quizmaster/model/dto/ValidateAnswerRequest$ValidateAnswerRequestBuilder.class
 com/quizmaster/exception/QuizException.class
 com/quizmaster/model/dto/ValidateAnswerRequest.class
