@@ -1,0 +1,36 @@
+meta {
+  name: Get Score
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://localhost:5000/api/quiz/score
+  query: {
+    sessionId: {{sessionId}}
+  }
+  auth: none
+}
+
+docs {
+  # Get Score
+  
+  This endpoint retrieves the current score for the quiz session. You can call this at any point during the quiz to check the user's progress.
+  
+  ## Variables
+  
+  - `sessionId`: The session ID returned from Create Quiz Session endpoint
+  
+  ## Response Example
+  
+  ```json
+  {
+    "userName": "TestUser",
+    "correctAnswers": 2,
+    "totalQuestions": 5,
+    "completedQuestions": 3,
+    "percentageScore": 66.67,
+    "remainingQuestions": 2
+  }
+  ```
+}

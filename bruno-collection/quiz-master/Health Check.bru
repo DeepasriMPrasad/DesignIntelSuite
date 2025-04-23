@@ -1,0 +1,27 @@
+meta {
+  name: Health Check
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://localhost:5000/api/quiz/health
+  auth: none
+}
+
+docs {
+  # Health Check
+  
+  This endpoint checks if the Quiz Master API is up and running. It's useful for monitoring and debugging.
+  
+  ## Response Example
+  
+  ```json
+  {
+    "status": "UP",
+    "message": "Quiz Master API is running",
+    "timestamp": "2025-04-23T20:50:00Z",
+    "version": "0.0.1-SNAPSHOT"
+  }
+  ```
+}
