@@ -2,11 +2,11 @@ modules = ["python-3.11", "java"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["maven"]
+packages = ["maven", "zip"]
 
 [deployment]
 deploymentTarget = "gce"
-run = ["sh", "-c", "streamlit run app.py --server.port 8080"]
+run = ["sh", "-c", "streamlit run app.py --server.port 8080 --server.address 0.0.0.0"]
 
 [workflows]
 runButton = "Quiz Master Application"
@@ -72,3 +72,7 @@ externalPort = 8081
 [[ports]]
 localPort = 8501
 externalPort = 3001
+
+[[ports]]
+localPort = 35729
+externalPort = 3000

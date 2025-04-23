@@ -1,0 +1,9 @@
+{
+  "name": "replit",
+  "variables": {
+    "baseUrl": "https://{{REPL_SLUG}}.{{REPL_OWNER}}.repl.co",
+    "sessionId": "",
+    "questionId": "",
+    "answerId": ""
+  }
+}

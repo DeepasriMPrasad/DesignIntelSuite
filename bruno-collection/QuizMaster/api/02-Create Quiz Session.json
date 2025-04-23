@@ -1,0 +1,20 @@
+{
+  "name": "Create Quiz Session",
+  "desc": "Create a new quiz session for a user",
+  "request": {
+    "method": "POST",
+    "url": "{{baseUrl}}/api/quiz/start",
+    "headers": [
+      {
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "json",
+      "json": {
+        "userName": "TestUser"
+      }
+    }
+  }
+}

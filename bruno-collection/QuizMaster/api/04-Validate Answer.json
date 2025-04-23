@@ -1,0 +1,22 @@
+{
+  "name": "Validate Answer",
+  "desc": "Validate the user's answer to a question",
+  "request": {
+    "method": "POST",
+    "url": "{{baseUrl}}/api/quiz/validate",
+    "headers": [
+      {
+        "name": "Content-Type",
+        "value": "application/json"
+      }
+    ],
+    "body": {
+      "mode": "json",
+      "json": {
+        "sessionId": "{{sessionId}}",
+        "questionId": "{{questionId}}",
+        "answerId": "{{answerId}}"
+      }
+    }
+  }
+}

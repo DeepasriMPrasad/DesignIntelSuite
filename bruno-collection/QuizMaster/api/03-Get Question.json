@@ -1,0 +1,15 @@
+{
+  "name": "Get Question",
+  "desc": "Get the current or next question for the quiz session",
+  "request": {
+    "method": "GET",
+    "url": "{{baseUrl}}/api/quiz/question",
+    "headers": [],
+    "params": [
+      {
+        "name": "sessionId",
+        "value": "{{sessionId}}"
+      }
+    ]
+  }
+}

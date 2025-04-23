@@ -1,0 +1,9 @@
+{
+  "name": "local",
+  "variables": {
+    "baseUrl": "http://localhost:5000",
+    "sessionId": "",
+    "questionId": "",
+    "answerId": ""
+  }
+}

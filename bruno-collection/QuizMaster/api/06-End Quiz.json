@@ -1,0 +1,15 @@
+{
+  "name": "End Quiz",
+  "desc": "End the quiz session and get the final score",
+  "request": {
+    "method": "POST",
+    "url": "{{baseUrl}}/api/quiz/end",
+    "headers": [],
+    "params": [
+      {
+        "name": "sessionId",
+        "value": "{{sessionId}}"
+      }
+    ]
+  }
+}

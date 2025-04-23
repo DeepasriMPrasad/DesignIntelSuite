@@ -1,0 +1,15 @@
+{
+  "name": "Get Score",
+  "desc": "Get the current score for the quiz session",
+  "request": {
+    "method": "GET",
+    "url": "{{baseUrl}}/api/quiz/score",
+    "headers": [],
+    "params": [
+      {
+        "name": "sessionId",
+        "value": "{{sessionId}}"
+      }
+    ]
+  }
+}
