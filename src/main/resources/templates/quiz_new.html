@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Master - Questions</title>
+    <title>Quiz Master</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
     <div class="container">
@@ -15,73 +15,63 @@
                 <div class="card quiz-card mt-5">
                     <div class="card-header text-center bg-primary text-white">
                         <h1 class="display-5">Quiz Master</h1>
-                    </div>
-                    
-                    <!-- Quiz Loading Screen -->
-                    <div id="loadingScreen" class="card-body text-center py-5">
-                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                            <span class="visually-hidden">Loading...</span>
+                        <div class="progress mt-2" style="height: 10px;">
+                            <div id="quizProgress" class="progress-bar" role="progressbar" style="width: 0%;"></div>
                         </div>
-                        <p class="lead mt-3">Loading your quiz...</p>
                     </div>
-                    
-                    <!-- Question Screen -->
-                    <div id="questionScreen" class="card-body" style="display: none;">
-                        <div class="progress mb-3">
-                            <div id="quizProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                        </div>
-                        <div class="d-flex justify-content-between mb-3">
-                            <span id="questionCounter">Question 1 of 5</span>
-                            <span id="attemptCounter">Attempts: 1/3</span>
+                    <div class="card-body">
+                        <!-- Loading Screen -->
+                        <div id="loadingScreen" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-3">Loading your question...</p>
                         </div>
                         
-                        <div class="question-container">
-                            <h2 id="questionText" class="mb-4">Question text will appear here</h2>
-                            
-                            <div id="options" class="options-container">
-                                <!-- Options will be inserted here dynamically -->
+                        <!-- Question Screen -->
+                        <div id="questionScreen" style="display: none;">
+                            <div class="d-flex justify-content-between mb-4">
+                                <span id="questionCounter" class="badge bg-primary p-2">Question 1 of 5</span>
+                                <span id="attemptCounter" class="badge bg-info p-2">Attempts: 0/3</span>
                             </div>
                             
-                            <div id="feedback" class="alert mt-4" style="display: none;"></div>
+                            <h2 id="questionText" class="mb-4">Question text goes here</h2>
+                            
+                            <div id="optionsContainer" class="mb-4">
+                                <!-- Options will be added here dynamically -->
+                            </div>
+                            
+                            <div id="feedbackContainer" class="mb-4">
+                                <div id="feedback" class="alert" style="display: none;"></div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button id="submitBtn" class="btn btn-primary">Submit Answer</button>
+                                <button id="nextBtn" class="btn btn-success" style="display: none;">Next Question</button>
+                            </div>
                         </div>
                         
-                        <button id="submitBtn" class="btn btn-primary w-100 mt-4">Submit Answer</button>
-                        <button id="nextBtn" class="btn btn-success w-100 mt-4" style="display: none;">Next Question</button>
+                        <!-- Quiz Complete Screen -->
+                        <div id="quizCompleteScreen" style="display: none;">
+                            <div class="text-center py-4">
+                                <h2 class="mb-4">Quiz Completed!</h2>
+                                
+                                <div class="score-display mb-4">
+                                    <div class="score-circle">
+                                        <span id="scorePercentage">0</span>%
+                                    </div>
+                                </div>
+                                
+                                <div class="score-details">
+                                    <p><strong>Questions:</strong> <span id="totalQuestions">0</span></p>
+                                    <p><strong>Correct Answers:</strong> <span id="correctAnswers">0</span></p>
+                                    <p><strong>Time Taken:</strong> <span id="timeTaken">0</span> seconds</p>
+                                </div>
+                                
+                                <button id="newQuizBtn" class="btn btn-primary mt-3">Start New Quiz</button>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- Quiz Complete Screen -->
-                    <div id="quizCompleteScreen" class="card-body text-center" style="display: none;">
-                        <h2 class="mb-4">Quiz Complete!</h2>
-                        
-                        <div class="score-display mb-4">
-                            <div class="display-1 text-primary mb-3"><span id="scorePercentage">0</span>%</div>
-                            <p class="lead">Your Score</p>
-                        </div>
-                        
-                        <div class="row text-center mb-4">
-                            <div class="col-4">
-                                <div class="border rounded p-3">
-                                    <h3 id="totalQuestions">0</h3>
-                                    <p>Total Questions</p>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="border rounded p-3">
-                                    <h3 id="correctAnswers">0</h3>
-                                    <p>Correct Answers</p>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="border rounded p-3">
-                                    <h3 id="timeTaken">0</h3>
-                                    <p>Seconds</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <button id="newQuizBtn" class="btn btn-primary btn-lg w-100">Start a New Quiz</button>
-                    </div>
-                    
                     <div class="card-footer text-center text-muted">
                         <p>Quiz Master &copy; 2025</p>
                     </div>
@@ -92,40 +82,62 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script th:src="@{/static/js/scripts.js}"></script>
-    <script th:inline="javascript">
-        // Get session ID from URL parameter
-        const sessionId = [[${sessionId}]];
+    <script src="/static/js/scripts.js"></script>
+    <script>
+        // Get session ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('sessionId');
         
-        // Global variables
+        // Variables
         let currentQuestion = null;
         let selectedOptionId = null;
+        let isSubmitting = false;  // Flag to prevent multiple submissions
         
         // DOM elements
         const loadingScreen = document.getElementById('loadingScreen');
         const questionScreen = document.getElementById('questionScreen');
         const quizCompleteScreen = document.getElementById('quizCompleteScreen');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const feedbackElement = document.getElementById('feedback');
         const quizProgress = document.getElementById('quizProgress');
         const questionCounter = document.getElementById('questionCounter');
         const attemptCounter = document.getElementById('attemptCounter');
-        const questionText = document.getElementById('questionText');
-        const optionsContainer = document.getElementById('options');
-        const feedbackElement = document.getElementById('feedback');
         const submitBtn = document.getElementById('submitBtn');
         const nextBtn = document.getElementById('nextBtn');
         const newQuizBtn = document.getElementById('newQuizBtn');
         
-        // Function to fetch the first question
+        // Function to fetch the next question
         function fetchQuestion() {
+            // Show loading screen and hide others
             loadingScreen.style.display = 'block';
             questionScreen.style.display = 'none';
             quizCompleteScreen.style.display = 'none';
             
+            // Hide previous feedback
+            feedbackElement.style.display = 'none';
+            
             console.log("Fetching question with sessionId:", sessionId);
+            
+            // Reset flags and state
+            isSubmitting = false;
+            selectedOptionId = null;
             
             // Reset any previously disabled buttons
             submitBtn.disabled = false;
+            submitBtn.style.display = 'block';
+            nextBtn.style.display = 'none';
             
+            // Clear option selection
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('active');
+                btn.classList.remove('btn-success');
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-outline-primary');
+            });
+            
+            // Make the API call to get a question
             axios.get(`/api/quiz/question?sessionId=${sessionId}`)
             .then(response => {
                 console.log("Question fetch response:", response.data);
@@ -142,24 +154,36 @@
                     const errorMsg = error.response.data.error;
                     console.log("Error message from API:", errorMsg);
                     
-                    if (errorMsg.includes("Invalid or expired session ID") || 
-                        errorMsg.includes("No more questions") || 
-                        errorMsg.includes("Maximum attempts")) {
-                        
-                        showToast("Quiz session ended. Showing your final results.", "info");
-                        
-                        // Go directly to end quiz
+                    if (errorMsg.includes("Invalid or expired session ID")) {
+                        // Session expired, redirect to start page
+                        showToast("Your session has expired. Redirecting to start page...", "warning");
                         setTimeout(() => {
-                            endQuiz();
-                        }, 1500);
-                        return;
+                            window.location.href = '/';
+                        }, 2000);
+                    } 
+                    else if (errorMsg.includes("completed all questions") || 
+                             errorMsg.includes("No more questions") || 
+                             errorMsg.includes("quiz session has ended") ||
+                             errorMsg.includes("Maximum attempts")) {
+                        // Quiz complete or all questions answered
+                        showToast("Quiz session ended. Showing your final results.", "info");
+                        setTimeout(() => endQuiz(), 1500);
                     }
+                    else {
+                        // Other errors - display to user
+                        showToast("Error: " + errorMsg, "danger");
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 3000);
+                    }
+                    return;
                 }
                 
-                alert('Failed to fetch question. Returning to start page.');
+                // Generic error handling
+                showToast('Failed to fetch question. Returning to start page.', 'danger');
                 setTimeout(() => {
                     window.location.href = '/';
-                }, 1000);
+                }, 2500);
             });
         }
         
@@ -177,7 +201,6 @@
             // Clear previous options and feedback
             optionsContainer.innerHTML = '';
             feedbackElement.style.display = 'none';
-            selectedOptionId = null;
             
             // Add options
             question.options.forEach(option => {
@@ -207,13 +230,38 @@
         
         // Function to validate an answer
         function validateAnswer() {
+            // Check if an option is selected
             if (!selectedOptionId) {
-                alert('Please select an answer');
+                showToast('Please select an answer', 'warning');
                 return;
             }
             
-            console.log("Validating answer with sessionId:", sessionId, "questionId:", currentQuestion.questionId, "answerId:", selectedOptionId);
+            // Check if we have a valid current question
+            if (!currentQuestion || !currentQuestion.questionId) {
+                showToast('No active question. Reloading...', 'warning');
+                fetchQuestion();
+                return;
+            }
             
+            // Prevent multiple submissions
+            if (isSubmitting) {
+                console.log("Submission already in progress");
+                return;
+            }
+            
+            // Set submitting flag
+            isSubmitting = true;
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            
+            console.log("Validating answer:", {
+                sessionId: sessionId,
+                questionId: currentQuestion.questionId,
+                answerId: selectedOptionId
+            });
+            
+            // Send validation request
             axios.post('/api/quiz/validate', {
                 sessionId: sessionId,
                 questionId: currentQuestion.questionId,
@@ -222,50 +270,87 @@
             .then(response => {
                 console.log("Answer validation response:", response.data);
                 const result = response.data;
+                
+                // Display feedback
                 displayFeedback(result);
                 
                 // Update attempts counter
-                attemptCounter.textContent = `Attempts: ${currentQuestion.attempts + 1}/${currentQuestion.maxAttempts}`;
+                attemptCounter.textContent = `Attempts: ${result.attempts}/${result.maxAttempts}`;
                 
-                // Disable further selections if correct or no more attempts
-                if (result.correct || result.remainingAttempts === 0) {
+                // Disable all option buttons if answer is correct or no attempts left
+                if (result.correct || result.attempts >= result.maxAttempts) {
                     document.querySelectorAll('.option-btn').forEach(btn => {
                         btn.disabled = true;
                     });
                     
-                    // For correct answers only (wrong answers with no attempts left are handled in displayFeedback)
-                    if (result.correct) {
-                        // Hide submit button, show next button if there are more questions
-                        submitBtn.style.display = 'none';
-                        if (result.remainingQuestions > 0) {
-                            nextBtn.style.display = 'block';
-                        } else {
-                            // End quiz if no more questions
-                            setTimeout(endQuiz, 2000);
-                        }
+                    // Hide submit button
+                    submitBtn.style.display = 'none';
+                    
+                    // For correct answers or max attempts reached
+                    if (result.remainingQuestions > 0) {
+                        // Show next button if more questions remain
+                        nextBtn.style.display = 'block';
+                    } else {
+                        // End quiz if no more questions
+                        showToast("Quiz completed! Getting your final score...", "success");
+                        setTimeout(endQuiz, 2000);
                     }
+                } else {
+                    // Re-enable submit button for next attempt
+                    submitBtn.disabled = false;
                 }
+                
+                // Reset submitting flag
+                isSubmitting = false;
             })
             .catch(error => {
                 console.error('Error validating answer:', error);
+                
+                // Reset submitting flag
+                isSubmitting = false;
+                
+                // Re-enable submit button by default
+                submitBtn.disabled = false;
                 
                 // Check for specific error messages
                 if (error.response && error.response.data && error.response.data.error) {
                     const errorMsg = error.response.data.error;
                     console.log("Error message from API:", errorMsg);
                     
+                    // Handle different error scenarios
                     if (errorMsg.includes("not the current question")) {
-                        // Handle session sync error - go to next question or end quiz
+                        // Handle session sync error - go to next question
                         showToast("There was an issue with your quiz session. Moving to the next question.", "warning");
+                        setTimeout(() => fetchQuestion(), 1500);
+                    } 
+                    else if (errorMsg.includes("already completed") || 
+                             errorMsg.includes("no active question") ||
+                             errorMsg.includes("No active question found")) {
+                        // Question might have been answered in another tab or session
+                        showToast("Loading your next question...", "info");
+                        setTimeout(() => fetchQuestion(), 1000);
+                    }
+                    else if (errorMsg.includes("Invalid or expired session")) {
+                        // Session expired or became invalid
+                        showToast("Your session has expired. Redirecting to start page...", "warning");
                         setTimeout(() => {
-                            // Try to get the next question or end the quiz
-                            fetchQuestion();
-                        }, 1500);
-                    } else {
-                        alert('Error: ' + errorMsg);
+                            window.location.href = '/';
+                        }, 2000);
+                    }
+                    else if (errorMsg.includes("completed all questions") || 
+                             errorMsg.includes("No more questions") ||
+                             errorMsg.includes("quiz session has ended")) {
+                        // Quiz is complete
+                        showToast("Quiz completed! Getting your final score...", "success");
+                        setTimeout(endQuiz, 1500);
+                    }
+                    else {
+                        // Generic error fallback
+                        showToast('Error: ' + errorMsg, "danger");
                     }
                 } else {
-                    alert('Failed to validate answer. Please try again.');
+                    // Network or unexpected error
+                    showToast('Failed to validate answer. Please try again.', "danger");
                 }
             });
         }
@@ -329,8 +414,11 @@
             questionScreen.style.display = 'none';
             quizCompleteScreen.style.display = 'none';
             
+            console.log("Ending quiz with sessionId:", sessionId);
+            
             axios.post(`/api/quiz/end?sessionId=${sessionId}`)
             .then(response => {
+                console.log("End quiz response:", response.data);
                 const scoreData = response.data;
                 
                 // Update score display with defaults in case of missing data
@@ -364,27 +452,40 @@
             });
         }
         
-        // Event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!sessionId) {
-                window.location.href = '/';
-                return;
+        // Direct DOM event binding instead of using addEventListener
+        document.onreadystatechange = function() {
+            if (document.readyState === 'complete') {
+                console.log("Document ready - binding events directly");
+                
+                if (!sessionId) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                console.log("Quiz page loaded with sessionId:", sessionId);
+                
+                // Fetch the first question
+                fetchQuestion();
+                
+                // Directly assign functions to onclick properties
+                if (submitBtn) {
+                    submitBtn.onclick = validateAnswer;
+                    console.log("Submit button handler attached");
+                }
+                
+                if (nextBtn) {
+                    nextBtn.onclick = fetchQuestion;
+                    console.log("Next button handler attached");
+                }
+                
+                if (newQuizBtn) {
+                    newQuizBtn.onclick = function() {
+                        window.location.href = '/';
+                    };
+                    console.log("New quiz button handler attached");
+                }
             }
-            
-            // Fetch the first question
-            fetchQuestion();
-            
-            // Submit button click handler
-            submitBtn.addEventListener('click', validateAnswer);
-            
-            // Next button click handler
-            nextBtn.addEventListener('click', fetchQuestion);
-            
-            // New quiz button click handler
-            newQuizBtn.addEventListener('click', function() {
-                window.location.href = '/';
-            });
-        });
+        };
     </script>
 </body>
 </html>

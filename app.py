@@ -13,25 +13,23 @@ st.set_page_config(
 )
 
 # Set fixed API URL for the external server with Replit-compatible URLs
-API_BASE_URL = "https://${REPL_SLUG}.${REPL_OWNER}.repl.co/api/quiz"
-SPRING_APP_URL = "https://${REPL_SLUG}.${REPL_OWNER}.repl.co"
+# Set fixed API URL for the external server with Replit-compatible URLs
+# Note: We're using port 5000 for the Spring Boot app (Quiz Master API)
+API_BASE_URL = "http://0.0.0.0:5000/api/quiz"
+SPRING_APP_URL = "http://0.0.0.0:5000"
 
-# Fallback to localhost for local testing
 try:
+    # Try to get Replit environment variables
     import os
     repl_slug = os.environ.get("REPL_SLUG", "")
     repl_owner = os.environ.get("REPL_OWNER", "")
     
-    if not repl_slug or not repl_owner:
-        API_BASE_URL = "http://localhost:5000/api/quiz"
-        SPRING_APP_URL = "http://localhost:5000"
-    else:
+    # If we're in a Replit environment, use the Replit URLs
+    if repl_slug and repl_owner:
         API_BASE_URL = f"https://{repl_slug}.{repl_owner}.repl.co/api/quiz"
         SPRING_APP_URL = f"https://{repl_slug}.{repl_owner}.repl.co"
 except Exception as e:
     st.sidebar.error(f"Error setting up URLs: {str(e)}")
-    API_BASE_URL = "http://localhost:5000/api/quiz"
-    SPRING_APP_URL = "http://localhost:5000"
 
 # Add debug info in sidebar
 st.sidebar.markdown("### Debug Information")

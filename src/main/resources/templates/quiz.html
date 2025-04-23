@@ -121,8 +121,14 @@
             questionScreen.style.display = 'none';
             quizCompleteScreen.style.display = 'none';
             
+            console.log("Fetching question with sessionId:", sessionId);
+            
+            // Reset any previously disabled buttons
+            submitBtn.disabled = false;
+            
             axios.get(`/api/quiz/question?sessionId=${sessionId}`)
             .then(response => {
+                console.log("Question fetch response:", response.data);
                 currentQuestion = response.data;
                 displayQuestion(currentQuestion);
                 loadingScreen.style.display = 'none';
@@ -134,6 +140,7 @@
                 // Check if this is an invalid session or no more questions error
                 if (error.response && error.response.data && error.response.data.error) {
                     const errorMsg = error.response.data.error;
+                    console.log("Error message from API:", errorMsg);
                     
                     if (errorMsg.includes("Invalid or expired session ID") || 
                         errorMsg.includes("No more questions") || 
@@ -205,8 +212,7 @@
                 return;
             }
             
-            // Disable submit button while processing to prevent multiple submissions
-            submitBtn.disabled = true;
+            console.log("Validating answer with sessionId:", sessionId, "questionId:", currentQuestion.questionId, "answerId:", selectedOptionId);
             
             axios.post('/api/quiz/validate', {
                 sessionId: sessionId,
@@ -214,6 +220,7 @@
                 answerId: selectedOptionId
             })
             .then(response => {
+                console.log("Answer validation response:", response.data);
                 const result = response.data;
                 displayFeedback(result);
                 
@@ -237,9 +244,6 @@
                             setTimeout(endQuiz, 2000);
                         }
                     }
-                } else {
-                    // Re-enable submit button for next attempt
-                    submitBtn.disabled = false;
                 }
             })
             .catch(error => {
@@ -248,6 +252,7 @@
                 // Check for specific error messages
                 if (error.response && error.response.data && error.response.data.error) {
                     const errorMsg = error.response.data.error;
+                    console.log("Error message from API:", errorMsg);
                     
                     if (errorMsg.includes("not the current question")) {
                         // Handle session sync error - go to next question or end quiz
@@ -258,11 +263,9 @@
                         }, 1500);
                     } else {
                         alert('Error: ' + errorMsg);
-                        submitBtn.disabled = false;
                     }
                 } else {
                     alert('Failed to validate answer. Please try again.');
-                    submitBtn.disabled = false;
                 }
             });
         }

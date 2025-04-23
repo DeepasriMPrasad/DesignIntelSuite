@@ -38,6 +38,13 @@ axios.interceptors.response.use(
 
 // Utility to show a toast notification
 function showToast(message, type = 'info') {
+    // Simple fallback if bootstrap isn't available
+    if (typeof bootstrap === 'undefined') {
+        console.log('Toast message:', message, '(Type:', type, ')');
+        alert(message);
+        return;
+    }
+    
     // Check if the toast container exists, create if not
     let toastContainer = document.getElementById('toast-container');
     
@@ -69,15 +76,37 @@ function showToast(message, type = 'info') {
     // Add to container
     toastContainer.appendChild(toast);
     
-    // Initialize Bootstrap toast and show it
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
+    // Log the message as well
+    console.log('Toast message:', message, '(Type:', type, ')');
     
-    // Remove after 5 seconds
-    setTimeout(() => {
-        bsToast.hide();
+    try {
+        // Initialize Bootstrap toast and show it
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        // Remove after 5 seconds
         setTimeout(() => {
+            try {
+                bsToast.hide();
+            } catch (err) {
+                toast.remove();
+            }
+            setTimeout(() => {
+                try {
+                    toast.remove();
+                } catch (err) {
+                    console.error('Failed to remove toast:', err);
+                }
+            }, 500);
+        }, 5000);
+    } catch (error) {
+        console.error('Failed to show toast:', error);
+        // Fallback
+        alert(message);
+        try {
             toast.remove();
-        }, 500);
-    }, 5000);
+        } catch (err) {
+            // Ignore
+        }
+    }
 }

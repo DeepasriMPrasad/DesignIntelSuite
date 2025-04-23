@@ -30,11 +30,11 @@ public class WebController {
     }
 
     /**
-     * Quiz page
+     * Quiz page - supports both /quiz and /quiz_new endpoints
      */
-    @GetMapping("/quiz")
+    @GetMapping({"/quiz", "/quiz_new"})
     public String quiz(@RequestParam(required = false) String sessionId, Model model) {
         model.addAttribute("sessionId", sessionId != null ? sessionId : "");
-        return "quiz";
+        return "quiz_new";
     }
 }

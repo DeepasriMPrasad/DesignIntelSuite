@@ -55,115 +55,162 @@ public class QuizServiceImpl implements QuizService {
     
     @Override
     public QuestionResponse getQuestion(String sessionId) {
-        // Get the session
-        QuizSession session = getValidSession(sessionId);
-        
-        // Check if the session has already completed the maximum number of questions
-        if (session.getCompletedQuestions().size() >= MAX_QUESTIONS_PER_SESSION) {
-            throw new QuizException("You have completed all questions for this quiz session");
+        try {
+            // Get the session
+            QuizSession session = getValidSession(sessionId);
+            
+            // Check if the session has already completed the maximum number of questions
+            if (session.getCompletedQuestions().size() >= MAX_QUESTIONS_PER_SESSION) {
+                throw new QuizException("You have completed all questions for this quiz session");
+            }
+            
+            // If there's a current question and it's not completed, return it
+            if (session.getCurrentQuestionId() != null && 
+                !session.getCompletedQuestions().contains(session.getCurrentQuestionId())) {
+                Question currentQuestion = getQuestionById(session.getCurrentQuestionId());
+                return mapToQuestionResponse(currentQuestion, session);
+            }
+            
+            // Get a random question that hasn't been completed yet
+            List<Question> allQuestions = questionLoader.loadQuestions();
+            List<Question> availableQuestions = allQuestions.stream()
+                    .filter(q -> !session.getCompletedQuestions().contains(q.getId()))
+                    .collect(Collectors.toList());
+            
+            if (availableQuestions.isEmpty()) {
+                throw new QuizException("No more questions available");
+            }
+            
+            Random random = new Random();
+            Question randomQuestion = availableQuestions.get(random.nextInt(availableQuestions.size()));
+            
+            // Update the session
+            session.setCurrentQuestionId(randomQuestion.getId());
+            session.setCurrentAttempts(0);
+            quizSessions.put(sessionId, session);
+            
+            return mapToQuestionResponse(randomQuestion, session);
+        } catch (QuizException e) {
+            // Re-throw the original exception
+            throw e;
+        } catch (Exception e) {
+            // Log the error and throw a more user-friendly message
+            System.err.println("Unexpected error in getQuestion: " + e.getMessage());
+            e.printStackTrace();
+            throw new QuizException("An unexpected error occurred while retrieving the question. Please try again.");
         }
-        
-        // If there's a current question and it's not completed, return it
-        if (session.getCurrentQuestionId() != null && 
-            !session.getCompletedQuestions().contains(session.getCurrentQuestionId())) {
-            Question currentQuestion = getQuestionById(session.getCurrentQuestionId());
-            return mapToQuestionResponse(currentQuestion, session);
-        }
-        
-        // Get a random question that hasn't been completed yet
-        List<Question> allQuestions = questionLoader.loadQuestions();
-        List<Question> availableQuestions = allQuestions.stream()
-                .filter(q -> !session.getCompletedQuestions().contains(q.getId()))
-                .collect(Collectors.toList());
-        
-        if (availableQuestions.isEmpty()) {
-            throw new QuizException("No more questions available");
-        }
-        
-        Random random = new Random();
-        Question randomQuestion = availableQuestions.get(random.nextInt(availableQuestions.size()));
-        
-        // Update the session
-        session.setCurrentQuestionId(randomQuestion.getId());
-        session.setCurrentAttempts(0);
-        quizSessions.put(sessionId, session);
-        
-        return mapToQuestionResponse(randomQuestion, session);
     }
     
     @Override
     public ValidateAnswerResponse validateAnswer(ValidateAnswerRequest request) {
-        QuizSession session = getValidSession(request.getSessionId());
-        
-        // Check if the question ID matches the current question
-        if (!request.getQuestionId().equals(session.getCurrentQuestionId())) {
-            throw new QuizException("This is not the current question for this session");
-        }
-        
-        Question question = getQuestionById(request.getQuestionId());
-        
-        // Check if the question is already completed
-        if (session.getCompletedQuestions().contains(question.getId())) {
-            throw new QuizException("This question has already been completed");
-        }
-        
-        // Increment attempts
-        session.setCurrentAttempts(session.getCurrentAttempts() + 1);
-        
-        // Check if the answer is correct
-        boolean isCorrect = question.getOptions().stream()
-                .filter(Option::isCorrect)
-                .anyMatch(option -> option.getId().equals(request.getAnswerId()));
-        
-        ValidateAnswerResponse.ValidateAnswerResponseBuilder responseBuilder = ValidateAnswerResponse.builder()
-                .questionId(question.getId())
-                .correct(isCorrect)
-                .attempts(session.getCurrentAttempts())
-                .maxAttempts(MAX_ATTEMPTS_PER_QUESTION);
-        
-        if (isCorrect) {
-            // If correct, mark the question as completed and increment correct answers
-            session.getCompletedQuestions().add(question.getId());
-            session.setCorrectAnswers(session.getCorrectAnswers() + 1);
-            session.setCurrentQuestionId(null);
-            session.setCurrentAttempts(0);
+        try {
+            // Validate inputs
+            if (request == null) {
+                throw new QuizException("Request cannot be null");
+            }
             
-            responseBuilder.message("Correct answer!");
-            responseBuilder.remainingQuestions(MAX_QUESTIONS_PER_SESSION - session.getCompletedQuestions().size());
-        } else {
-            // If incorrect, check if max attempts reached
-            if (session.getCurrentAttempts() >= MAX_ATTEMPTS_PER_QUESTION) {
-                // Mark the question as completed but don't increment correct answers
+            if (request.getSessionId() == null || request.getSessionId().trim().isEmpty()) {
+                throw new QuizException("Session ID cannot be empty");
+            }
+            
+            if (request.getQuestionId() == null || request.getQuestionId().trim().isEmpty()) {
+                throw new QuizException("Question ID cannot be empty");
+            }
+            
+            if (request.getAnswerId() == null || request.getAnswerId().trim().isEmpty()) {
+                throw new QuizException("Answer ID cannot be empty");
+            }
+            
+            QuizSession session = getValidSession(request.getSessionId());
+            
+            // Check if the session has a current question
+            if (session.getCurrentQuestionId() == null) {
+                // If there's no current question, fetch a new one instead of throwing an error
+                getQuestion(request.getSessionId());
+                throw new QuizException("No active question found. A new question has been loaded.");
+            }
+            
+            // Check if the question ID matches the current question
+            if (!request.getQuestionId().equals(session.getCurrentQuestionId())) {
+                // Instead of error, try to handle this gracefully
+                // Get the current question to validate against
+                String currentQuestionId = session.getCurrentQuestionId();
+                throw new QuizException("This is not the current question for this session. Please reload to get the current question.");
+            }
+            
+            Question question = getQuestionById(request.getQuestionId());
+            
+            // Check if the question is already completed
+            if (session.getCompletedQuestions().contains(question.getId())) {
+                throw new QuizException("This question has already been completed");
+            }
+            
+            // Increment attempts
+            session.setCurrentAttempts(session.getCurrentAttempts() + 1);
+            
+            // Check if the answer is correct
+            boolean isCorrect = question.getOptions().stream()
+                    .filter(Option::isCorrect)
+                    .anyMatch(option -> option.getId().equals(request.getAnswerId()));
+            
+            ValidateAnswerResponse.ValidateAnswerResponseBuilder responseBuilder = ValidateAnswerResponse.builder()
+                    .questionId(question.getId())
+                    .correct(isCorrect)
+                    .attempts(session.getCurrentAttempts())
+                    .maxAttempts(MAX_ATTEMPTS_PER_QUESTION);
+            
+            if (isCorrect) {
+                // If correct, mark the question as completed and increment correct answers
                 session.getCompletedQuestions().add(question.getId());
+                session.setCorrectAnswers(session.getCorrectAnswers() + 1);
                 session.setCurrentQuestionId(null);
                 session.setCurrentAttempts(0);
                 
-                // Get the correct answer for feedback
-                String correctAnswerId = question.getOptions().stream()
-                        .filter(Option::isCorrect)
-                        .map(Option::getId)
-                        .findFirst()
-                        .orElse("");
-                
-                responseBuilder.message("Incorrect answer. You've used all attempts. The correct answer was: " + 
-                                        question.getOptions().stream()
-                                                .filter(Option::isCorrect)
-                                                .map(Option::getText)
-                                                .findFirst()
-                                                .orElse(""));
-                responseBuilder.correctAnswerId(correctAnswerId);
+                responseBuilder.message("Correct answer!");
                 responseBuilder.remainingQuestions(MAX_QUESTIONS_PER_SESSION - session.getCompletedQuestions().size());
             } else {
-                responseBuilder.message("Incorrect answer. Please try again. Attempts remaining: " + 
-                                        (MAX_ATTEMPTS_PER_QUESTION - session.getCurrentAttempts()));
-                responseBuilder.remainingAttempts(MAX_ATTEMPTS_PER_QUESTION - session.getCurrentAttempts());
+                // If incorrect, check if max attempts reached
+                if (session.getCurrentAttempts() >= MAX_ATTEMPTS_PER_QUESTION) {
+                    // Mark the question as completed but don't increment correct answers
+                    session.getCompletedQuestions().add(question.getId());
+                    session.setCurrentQuestionId(null);
+                    session.setCurrentAttempts(0);
+                    
+                    // Get the correct answer for feedback
+                    String correctAnswerId = question.getOptions().stream()
+                            .filter(Option::isCorrect)
+                            .map(Option::getId)
+                            .findFirst()
+                            .orElse("");
+                    
+                    responseBuilder.message("Incorrect answer. You've used all attempts. The correct answer was: " + 
+                                            question.getOptions().stream()
+                                                    .filter(Option::isCorrect)
+                                                    .map(Option::getText)
+                                                    .findFirst()
+                                                    .orElse(""));
+                    responseBuilder.correctAnswerId(correctAnswerId);
+                    responseBuilder.remainingQuestions(MAX_QUESTIONS_PER_SESSION - session.getCompletedQuestions().size());
+                } else {
+                    responseBuilder.message("Incorrect answer. Please try again. Attempts remaining: " + 
+                                            (MAX_ATTEMPTS_PER_QUESTION - session.getCurrentAttempts()));
+                    responseBuilder.remainingAttempts(MAX_ATTEMPTS_PER_QUESTION - session.getCurrentAttempts());
+                }
             }
+            
+            // Update the session
+            quizSessions.put(request.getSessionId(), session);
+            
+            return responseBuilder.build();
+        } catch (QuizException e) {
+            // Re-throw quiz exceptions
+            throw e;
+        } catch (Exception e) {
+            // Log unexpected errors and provide a user-friendly message
+            System.err.println("Unexpected error in validateAnswer: " + e.getMessage());
+            e.printStackTrace();
+            throw new QuizException("An unexpected error occurred while validating your answer. Please try again.");
         }
-        
-        // Update the session
-        quizSessions.put(request.getSessionId(), session);
-        
-        return responseBuilder.build();
     }
     
     @Override
@@ -182,7 +229,22 @@ public class QuizServiceImpl implements QuizService {
     
     @Override
     public EndQuizResponse endQuiz(String sessionId) {
-        QuizSession session = getValidSession(sessionId);
+        // Try to get the session, creating a new one if needed for graceful error handling
+        QuizSession session;
+        try {
+            session = getValidSession(sessionId);
+        } catch (QuizException e) {
+            // Create a default response if session is invalid
+            return EndQuizResponse.builder()
+                    .sessionId(sessionId)
+                    .userName("Guest")
+                    .totalQuestions(0)
+                    .correctAnswers(0)
+                    .percentageScore(0)
+                    .duration(0)
+                    .message("Quiz completed with errors")
+                    .build();
+        }
         
         // Mark the session as inactive
         session.setActive(false);
@@ -201,13 +263,20 @@ public class QuizServiceImpl implements QuizService {
     }
     
     private QuizSession getValidSession(String sessionId) {
+        if (sessionId == null || sessionId.trim().isEmpty()) {
+            throw new QuizException("Session ID cannot be empty");
+        }
+        
         QuizSession session = quizSessions.get(sessionId);
         if (session == null) {
             throw new QuizException("Invalid or expired session ID");
         }
+        
+        // Check if session is active
         if (!session.isActive()) {
             throw new QuizException("This quiz session has already ended");
         }
+        
         return session;
     }
     
