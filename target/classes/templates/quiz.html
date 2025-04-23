@@ -130,8 +130,29 @@
             })
             .catch(error => {
                 console.error('Error fetching question:', error);
-                alert('Failed to fetch question. Please try again.');
-                window.location.href = '/';
+                
+                // Check if this is an invalid session or no more questions error
+                if (error.response && error.response.data && error.response.data.error) {
+                    const errorMsg = error.response.data.error;
+                    
+                    if (errorMsg.includes("Invalid or expired session ID") || 
+                        errorMsg.includes("No more questions") || 
+                        errorMsg.includes("Maximum attempts")) {
+                        
+                        showToast("Quiz session ended. Showing your final results.", "info");
+                        
+                        // Go directly to end quiz
+                        setTimeout(() => {
+                            endQuiz();
+                        }, 1500);
+                        return;
+                    }
+                }
+                
+                alert('Failed to fetch question. Returning to start page.');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
             });
         }
         
@@ -184,6 +205,9 @@
                 return;
             }
             
+            // Disable submit button while processing to prevent multiple submissions
+            submitBtn.disabled = true;
+            
             axios.post('/api/quiz/validate', {
                 sessionId: sessionId,
                 questionId: currentQuestion.questionId,
@@ -202,19 +226,44 @@
                         btn.disabled = true;
                     });
                     
-                    // Hide submit button, show next button if there are more questions
-                    submitBtn.style.display = 'none';
-                    if (result.remainingQuestions > 0) {
-                        nextBtn.style.display = 'block';
-                    } else {
-                        // End quiz if no more questions
-                        setTimeout(endQuiz, 2000);
+                    // For correct answers only (wrong answers with no attempts left are handled in displayFeedback)
+                    if (result.correct) {
+                        // Hide submit button, show next button if there are more questions
+                        submitBtn.style.display = 'none';
+                        if (result.remainingQuestions > 0) {
+                            nextBtn.style.display = 'block';
+                        } else {
+                            // End quiz if no more questions
+                            setTimeout(endQuiz, 2000);
+                        }
                     }
+                } else {
+                    // Re-enable submit button for next attempt
+                    submitBtn.disabled = false;
                 }
             })
             .catch(error => {
                 console.error('Error validating answer:', error);
-                alert('Failed to validate answer. Please try again.');
+                
+                // Check for specific error messages
+                if (error.response && error.response.data && error.response.data.error) {
+                    const errorMsg = error.response.data.error;
+                    
+                    if (errorMsg.includes("not the current question")) {
+                        // Handle session sync error - go to next question or end quiz
+                        showToast("There was an issue with your quiz session. Moving to the next question.", "warning");
+                        setTimeout(() => {
+                            // Try to get the next question or end the quiz
+                            fetchQuestion();
+                        }, 1500);
+                    } else {
+                        alert('Error: ' + errorMsg);
+                        submitBtn.disabled = false;
+                    }
+                } else {
+                    alert('Failed to validate answer. Please try again.');
+                    submitBtn.disabled = false;
+                }
             });
         }
         
@@ -255,21 +304,37 @@
                             btn.classList.remove('btn-outline-primary');
                         }
                     });
+                    
+                    // If this was the last attempt, either go to next question or end quiz
+                    submitBtn.style.display = 'none';
+                    if (result.remainingQuestions > 0) {
+                        nextBtn.style.display = 'block';
+                        showToast('Moving to next question after running out of attempts', 'warning');
+                    } else {
+                        // End quiz if no more questions
+                        showToast('Quiz will end since you have run out of attempts', 'warning');
+                        setTimeout(endQuiz, 2000);
+                    }
                 }
             }
         }
         
         // Function to end the quiz and display score
         function endQuiz() {
+            // Show loading screen while processing
+            loadingScreen.style.display = 'block';
+            questionScreen.style.display = 'none';
+            quizCompleteScreen.style.display = 'none';
+            
             axios.post(`/api/quiz/end?sessionId=${sessionId}`)
             .then(response => {
                 const scoreData = response.data;
                 
-                // Update score display
-                document.getElementById('scorePercentage').textContent = Math.round(scoreData.percentageScore);
-                document.getElementById('totalQuestions').textContent = scoreData.totalQuestions;
-                document.getElementById('correctAnswers').textContent = scoreData.correctAnswers;
-                document.getElementById('timeTaken').textContent = scoreData.duration;
+                // Update score display with defaults in case of missing data
+                document.getElementById('scorePercentage').textContent = Math.round(scoreData.percentageScore || 0);
+                document.getElementById('totalQuestions').textContent = scoreData.totalQuestions || 0;
+                document.getElementById('correctAnswers').textContent = scoreData.correctAnswers || 0;
+                document.getElementById('timeTaken').textContent = scoreData.duration || 0;
                 
                 // Show quiz complete screen
                 loadingScreen.style.display = 'none';
@@ -278,7 +343,21 @@
             })
             .catch(error => {
                 console.error('Error ending quiz:', error);
-                alert('Failed to end quiz. Please try again.');
+                
+                // Even if there's an error, show the quiz end screen with default values
+                // This ensures users don't get stuck
+                document.getElementById('scorePercentage').textContent = "0";
+                document.getElementById('totalQuestions').textContent = "0";
+                document.getElementById('correctAnswers').textContent = "0";
+                document.getElementById('timeTaken').textContent = "0";
+                
+                // Show error message
+                showToast('There was an error processing your final score. Your session may have expired.', 'danger');
+                
+                // Show quiz complete screen
+                loadingScreen.style.display = 'none';
+                questionScreen.style.display = 'none';
+                quizCompleteScreen.style.display = 'block';
             });
         }
         
