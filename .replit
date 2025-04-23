@@ -24,10 +24,6 @@ args = "Spring Boot Application"
 task = "workflow.run"
 args = "quiz-master-spring-boot"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Streamlit Client"
-
 [[workflows.workflow]]
 name = "Spring Boot Application"
 author = "agent"
@@ -56,21 +52,6 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "mvn spring-boot:run"
-
-[[workflows.workflow]]
-name = "Streamlit Client"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "streamlit run app.py"
-waitForPort = 5000
 
 [[ports]]
 localPort = 5000
