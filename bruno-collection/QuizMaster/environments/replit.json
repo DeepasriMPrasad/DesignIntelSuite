@@ -1,7 +1,7 @@
 {
   "name": "replit",
   "variables": {
-    "baseUrl": "https://{{REPL_SLUG}}.{{REPL_OWNER}}.repl.co",
+    "baseUrl": "https://{{REPL_SLUG}}.{{REPL_OWNER}}.repl.co/quizmaster",
     "sessionId": "",
     "questionId": "",
     "answerId": ""

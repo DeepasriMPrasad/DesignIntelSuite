@@ -13,9 +13,9 @@ st.set_page_config(
 )
 
 # Set fixed API URL for the external server with Replit-compatible URLs
-# Note: We're using port 5000 for the Spring Boot app (Quiz Master API)
-API_BASE_URL = "http://0.0.0.0:5000/api/quiz"
-SPRING_APP_URL = "http://0.0.0.0:5000"
+# Note: We're using port 5000 for the Spring Boot app (Quiz Master API) with context path /quizmaster
+API_BASE_URL = "http://0.0.0.0:5000/quizmaster/api/quiz"
+SPRING_APP_URL = "http://0.0.0.0:5000/quizmaster"
 
 try:
     # Try to get Replit environment variables
@@ -25,8 +25,8 @@ try:
     
     # If we're in a Replit environment, use the Replit URLs
     if repl_slug and repl_owner:
-        API_BASE_URL = f"https://{repl_slug}.{repl_owner}.repl.co/api/quiz"
-        SPRING_APP_URL = f"https://{repl_slug}.{repl_owner}.repl.co"
+        API_BASE_URL = f"https://{repl_slug}.{repl_owner}.repl.co/quizmaster/api/quiz"
+        SPRING_APP_URL = f"https://{repl_slug}.{repl_owner}.repl.co/quizmaster"
 except Exception as e:
     st.sidebar.error(f"Error setting up URLs: {str(e)}")
 
@@ -43,7 +43,8 @@ st.sidebar.markdown("*Note: If you encounter any issues with the Streamlit inter
 # Function to check if API is available
 def is_api_available():
     try:
-        response = requests.get(API_BASE_URL.replace('/api/quiz', ''), timeout=2)
+        health_check_url = f"{API_BASE_URL.split('/api/quiz')[0]}/api/quiz/health"
+        response = requests.get(health_check_url, timeout=2)
         return response.status_code < 400
     except Exception as e:
         st.sidebar.error(f"Error connecting to API: {str(e)}")
@@ -332,9 +333,9 @@ st.markdown("""
 
 If you're having trouble accessing the Quiz Master application, try the following:
 
-1. **Access via URL**: The Spring Boot application is running on port 5000, which is directly accessible via Replit.
+1. **Access via URL**: The Spring Boot application is running on port 5000 with context path '/quizmaster', which is directly accessible via Replit.
    - You can access the Quiz Master application directly using Replit's URL (shown in your browser's address bar).
-   - The Quiz Master application should be available at the root URL.
+   - The Quiz Master application should be available at the URL path '/quizmaster'.
 
 2. **Verify API Access**: Check if the API is available by clicking on the debug button below.
 
@@ -346,11 +347,13 @@ If you're having trouble accessing the Quiz Master application, try the followin
 # Add a debug button to test the API connection
 if st.button("Test Spring Boot API Connection"):
     try:
-        response = requests.get(f"{SPRING_APP_URL}/api/quiz/health", timeout=5)
+        health_check_url = f"{API_BASE_URL.split('/api/quiz')[0]}/api/quiz/health"
+        st.info(f"Connecting to: {health_check_url}")
+        response = requests.get(health_check_url, timeout=5)
         if response.status_code == 200:
             st.success(f"✅ Successfully connected to Spring Boot API: {response.text}")
         else:
             st.error(f"⚠️ Connected but received error status: {response.status_code} - {response.text}")
     except Exception as e:
         st.error(f"❌ Failed to connect to Spring Boot API: {str(e)}")
-        st.info("Make sure the Spring Boot application is running on port 5000")
+        st.info("Make sure the Spring Boot application is running on port 5000 with the context path '/quizmaster'")
