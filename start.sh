@@ -10,7 +10,8 @@ echo "Waiting for Spring Boot to start..."
 while ! nc -z localhost 5000; do
   sleep 1
 done
+echo "Spring Boot started successfully!"
 
 # Start Streamlit
 echo "Starting Streamlit application..."
-streamlit run app.py --server.port 8000 --server.address 0.0.0.0
+streamlit run app.py --server.port 5000 --server.address 0.0.0.0
