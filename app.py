@@ -150,10 +150,10 @@ else:
 
 
 # Function to start a new quiz
-def start_new_quiz(user_name):
+def start_new_quiz(user_name, i_number):
     try:
         response = requests.post(f"{API_BASE_URL}/start",
-                                 json={"userName": user_name})
+                                 json={"userName": user_name, "iNumber": i_number})
         if response.status_code == 200:
             data = response.json()
             st.session_state.session_id = data.get('sessionId')
@@ -263,16 +263,25 @@ if st.session_state.session_id is None:
 
         with st.form("start_quiz_form"):
             user_name = st.text_input("Your Name", max_chars=50)
+            i_number = st.text_input("Your I-Number", max_chars=20, placeholder="e.g., I123456")
+            st.caption("Each I-Number can only take the quiz once")
             start_button = st.form_submit_button("Start Quiz")
 
-            if start_button and user_name:
-                if start_new_quiz(user_name):
-                    st.success(
-                        f"Welcome, {user_name}! Your quiz is starting...")
-                    if get_next_question():
-                        st.rerun()
+            if start_button and user_name and i_number:
+                # Validate I-Number format (should start with 'I' followed by numbers)
+                if not i_number.strip().upper().startswith('I') or not i_number.strip()[1:].isdigit():
+                    st.warning("Please enter a valid I-Number (format: I followed by numbers)")
+                else:
+                    formatted_i_number = i_number.strip().upper()  # Ensure proper format
+                    if start_new_quiz(user_name, formatted_i_number):
+                        st.success(f"Welcome, {user_name}! Your quiz is starting...")
+                        if get_next_question():
+                            st.rerun()
             elif start_button:
-                st.warning("Please enter your name to start the quiz.")
+                if not user_name:
+                    st.warning("Please enter your name to start the quiz.")
+                if not i_number:
+                    st.warning("Please enter your I-Number to start the quiz.")
 
 elif st.session_state.quiz_ended:
     # Quiz ended screen
