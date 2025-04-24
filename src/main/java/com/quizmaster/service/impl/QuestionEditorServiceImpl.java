@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
@@ -32,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class QuestionEditorServiceImpl implements QuestionEditorService {
 
-    @Value("${questions.excel-path:classpath:questions.xlsx}")
+    @Value("${questions.excel-path:file:./questions.xlsx}")
     private Resource questionsExcelResource;
     
     private List<Question> questions = new ArrayList<>();
@@ -42,9 +44,105 @@ public class QuestionEditorServiceImpl implements QuestionEditorService {
     @PostConstruct
     public void init() {
         try {
+            // Check if external questions.xlsx exists, if not copy from classpath
+            File externalFile = null;
+            try {
+                externalFile = questionsExcelResource.getFile();
+                if (!externalFile.exists()) {
+                    copyDefaultQuestionsToExternalFile(externalFile);
+                }
+            } catch (IOException e) {
+                log.warn("Could not access external questions file, will create a new one", e);
+                // If file doesn't exist or can't be accessed, create a directory and a new file
+                if (externalFile != null) {
+                    externalFile.getParentFile().mkdirs();
+                    createNewQuestionsFile(externalFile);
+                }
+            }
+            
             loadQuestionsFromExcel();
         } catch (IOException e) {
             log.error("Error loading questions from Excel", e);
+        }
+    }
+    
+    private void copyDefaultQuestionsToExternalFile(File externalFile) {
+        log.info("External questions file not found. Creating from default template.");
+        try {
+            // Get the default questions from classpath
+            Resource defaultResource = new ClassPathResource("questions.xlsx");
+            if (defaultResource.exists()) {
+                try (InputStream is = defaultResource.getInputStream();
+                     FileOutputStream fos = new FileOutputStream(externalFile)) {
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = is.read(buffer)) != -1) {
+                        fos.write(buffer, 0, bytesRead);
+                    }
+                }
+                log.info("Default questions copied to: {}", externalFile.getAbsolutePath());
+            } else {
+                log.warn("Default questions file not found in classpath, creating new file");
+                createNewQuestionsFile(externalFile);
+            }
+        } catch (IOException e) {
+            log.error("Failed to copy default questions", e);
+            createNewQuestionsFile(externalFile);
+        }
+    }
+    
+    private void createNewQuestionsFile(File file) {
+        log.info("Creating new questions file at: {}", file.getAbsolutePath());
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("Questions");
+            
+            // Create header row
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"ID", "Question", 
+                                "Option1_ID", "Option1_Text", "Option1_Correct", 
+                                "Option2_ID", "Option2_Text", "Option2_Correct",
+                                "Option3_ID", "Option3_Text", "Option3_Correct",
+                                "Option4_ID", "Option4_Text", "Option4_Correct"};
+            
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+            }
+            
+            // Create a sample question
+            Row row = sheet.createRow(1);
+            row.createCell(0).setCellValue("1");
+            row.createCell(1).setCellValue("What is CXS?");
+            
+            row.createCell(2).setCellValue("1");
+            row.createCell(3).setCellValue("CXS Architecture Team");
+            row.createCell(4).setCellValue(true);
+            
+            row.createCell(5).setCellValue("2");
+            row.createCell(6).setCellValue("Customer Experience Service");
+            row.createCell(7).setCellValue(false);
+            
+            row.createCell(8).setCellValue("3");
+            row.createCell(9).setCellValue("Cloud X Solutions");
+            row.createCell(10).setCellValue(false);
+            
+            row.createCell(11).setCellValue("4");
+            row.createCell(12).setCellValue("Content Xchange System");
+            row.createCell(13).setCellValue(false);
+            
+            // Auto-size columns
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            
+            // Write the output to file
+            try (FileOutputStream fileOut = new FileOutputStream(file)) {
+                workbook.write(fileOut);
+            }
+            
+            log.info("New questions file created successfully");
+        } catch (IOException e) {
+            log.error("Failed to create new questions file", e);
         }
     }
     
@@ -52,7 +150,13 @@ public class QuestionEditorServiceImpl implements QuestionEditorService {
         questions.clear();
         questionMap.clear();
         
-        try (FileInputStream fis = new FileInputStream(questionsExcelResource.getFile());
+        File externalFile = questionsExcelResource.getFile();
+        if (!externalFile.exists()) {
+            log.warn("Questions file does not exist at: {}", externalFile.getAbsolutePath());
+            return;
+        }
+        
+        try (FileInputStream fis = new FileInputStream(externalFile);
              Workbook workbook = WorkbookFactory.create(fis)) {
             
             Sheet sheet = workbook.getSheetAt(0);

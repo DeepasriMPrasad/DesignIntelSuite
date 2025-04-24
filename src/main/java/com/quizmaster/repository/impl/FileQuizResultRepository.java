@@ -2,7 +2,7 @@
 package com.quizmaster.repository.impl;
 
 import com.quizmaster.model.QuizResult;
-import com.quizmaster.repository.impl.QuizResultRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 @Repository
+@Slf4j
 public class FileQuizResultRepository implements QuizResultRepository {
 
     private static final String EXCEL_FILE_NAME = "quiz_results.xlsx";

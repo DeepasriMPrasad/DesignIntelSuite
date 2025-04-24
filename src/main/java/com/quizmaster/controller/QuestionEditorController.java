@@ -142,10 +142,13 @@ public class QuestionEditorController {
         
         try {
             questionEditorService.saveQuestionsToExcel();
-            model.addAttribute("successMessage", "Questions saved to Excel successfully!");
+            model.addAttribute("successMessage", "Questions saved to Excel file successfully!");
         } catch (IOException e) {
             log.error("Error saving questions to Excel", e);
             model.addAttribute("errorMessage", "Error saving to Excel: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Error saving questions to Excel", e);
+            model.addAttribute("errorMessage", "Error saving questions to Excel: " + e.getMessage());
         }
         
         List<Question> questions = questionEditorService.getAllQuestions();
