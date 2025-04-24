@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,8 @@ public class QuizController {
     private final QuizResultRecorder quizResultRecorder;
 
     @Autowired
-    public QuizController(QuizService quizService, QuizResultRecorder quizResultRecorder) {
+    public QuizController(QuizService quizService, 
+                         @Qualifier("jpaQuizResultRecorder") QuizResultRecorder quizResultRecorder) {
         this.quizService = quizService;
         this.quizResultRecorder = quizResultRecorder;
     }

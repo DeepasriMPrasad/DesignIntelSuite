@@ -2,10 +2,13 @@ package com.quizmaster.service.impl;
 
 import com.quizmaster.model.QuizResult;
 import com.quizmaster.model.dto.RankingResponse;
-import com.quizmaster.repository.impl.QuizResultRepository;
+import com.quizmaster.repository.QuizResultJpaRepository;
 import com.quizmaster.service.QuizRankingService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -13,25 +16,27 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+/**
+ * JPA implementation of QuizRankingService
+ */
 @Service
-@Qualifier("fileQuizRankingService")
-public class QuizRankingServiceImpl implements QuizRankingService {
+@Slf4j
+@Primary
+@Qualifier("jpaQuizRankingService")
+public class JpaQuizRankingService implements QuizRankingService {
 
-    private final QuizResultRepository quizResultRepository;
+    private final QuizResultJpaRepository quizResultRepository;
 
     @Autowired
-    public QuizRankingServiceImpl(QuizResultRepository quizResultRepository) {
+    public JpaQuizRankingService(QuizResultJpaRepository quizResultRepository) {
         this.quizResultRepository = quizResultRepository;
     }
 
     @Override
-    public void saveQuizResult(QuizResult result) {
-        quizResultRepository.saveResult(result);
-    }
-
-    @Override
     public List<QuizResult> getTopResults(int limit) {
+        log.debug("Getting top {} quiz results", limit);
         return getRankedResults().stream()
                 .limit(limit)
                 .collect(Collectors.toList());
@@ -39,23 +44,26 @@ public class QuizRankingServiceImpl implements QuizRankingService {
 
     @Override
     public List<QuizResult> getAllResults() {
+        log.debug("Getting all quiz results");
         return getRankedResults();
     }
 
     @Override
     public RankingResponse getUserRanking(String userName) {
+        log.debug("Getting ranking for user: {}", userName);
+        
         List<QuizResult> rankedResults = getRankedResults();
-
+        
         // Find all results for the user
         List<QuizResult> userResults = rankedResults.stream()
                 .filter(r -> r.getUserName().equals(userName))
                 .collect(Collectors.toList());
-
+        
         // Find the best result (highest rank/lowest rank number)
         QuizResult bestResult = userResults.stream()
                 .min(Comparator.comparing(QuizResult::getRank))
                 .orElse(null);
-
+        
         if (bestResult == null) {
             return RankingResponse.builder()
                     .userName(userName)
@@ -64,38 +72,45 @@ public class QuizRankingServiceImpl implements QuizRankingService {
                     .totalParticipants(rankedResults.size())
                     .build();
         }
-
+        
         return RankingResponse.builder()
                 .userName(userName)
                 .rank(bestResult.getRank())
                 .percentageScore(bestResult.getPercentageScore())
                 .score(bestResult.getScore())
                 .totalQuestions(bestResult.getTotalQuestions())
+                .correctAnswers(bestResult.getCorrectAnswers())
                 .bestCompletionTimeSeconds(bestResult.getTimeTakenSeconds())
+                .timeTakenSeconds(bestResult.getTimeTakenSeconds())
                 .totalAttempts(userResults.size())
                 .lastCompletedAt(bestResult.getCompletedAt())
+                .completedAt(bestResult.getCompletedAt())
                 .totalParticipants(rankedResults.size())
                 .build();
     }
 
     @Override
-    public void clearAllResults() throws IOException {
-        quizResultRepository.clearAllResults();
+    public void saveQuizResult(QuizResult quizResult) {
+        log.debug("Saving quiz result for user: {}", quizResult.getUserName());
+        quizResultRepository.save(quizResult);
     }
 
+    @Override
+    public void clearAllResults() throws IOException {
+        log.debug("Clearing all quiz results");
+        quizResultRepository.deleteAll();
+    }
+    
     private List<QuizResult> getRankedResults() {
-        List<QuizResult> results = quizResultRepository.getAllResults();
-
-        // Sort by percentage score (desc), then by time taken (asc) if scores are equal
-        results.sort(
-                Comparator.comparing(QuizResult::getPercentageScore, Comparator.reverseOrder())
-                        .thenComparing(QuizResult::getTimeTakenSeconds)
+        List<QuizResult> results = quizResultRepository.findAll(
+                Sort.by(Sort.Direction.DESC, "percentageScore")
+                    .and(Sort.by(Sort.Direction.ASC, "timeTakenSeconds"))
         );
-
+        
         // Assign ranks
         AtomicInteger rank = new AtomicInteger(1);
         results.forEach(result -> result.setRank(rank.getAndIncrement()));
-
+        
         return results;
     }
 }

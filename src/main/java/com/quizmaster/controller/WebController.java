@@ -4,6 +4,7 @@ import com.quizmaster.model.QuizResult;
 import com.quizmaster.service.QuizRankingService;
 import com.quizmaster.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +23,8 @@ public class WebController {
     private final QuizRankingService quizRankingService;
 
     @Autowired
-    public WebController(QuizService quizService, QuizRankingService quizRankingService) {
+    public WebController(QuizService quizService, 
+                        @Qualifier("jpaQuizRankingService") QuizRankingService quizRankingService) {
         this.quizService = quizService;
         this.quizRankingService = quizRankingService;
     }

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,8 @@ public class RankingController {
     private final ExcelReportGenerator excelReportGenerator;
 
     @Autowired
-    public RankingController(QuizRankingService quizRankingService, ExcelReportGenerator excelReportGenerator) {
+    public RankingController(@Qualifier("jpaQuizRankingService") QuizRankingService quizRankingService, 
+                            ExcelReportGenerator excelReportGenerator) {
         this.quizRankingService = quizRankingService;
         this.excelReportGenerator = excelReportGenerator;
     }

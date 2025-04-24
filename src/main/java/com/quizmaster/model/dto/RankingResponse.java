@@ -14,12 +14,17 @@ import java.time.LocalDateTime;
 public class RankingResponse {
     private String userName;
     private int rank;
-    private double percentageScore;
     private int score;
+    private double percentageScore;
     private int totalQuestions;
+    private int correctAnswers;
+    private int timeTakenSeconds;
+    private LocalDateTime completedAt;
+    private int totalParticipants;
+    
+    // Additional fields used by QuizRankingServiceImpl
+    private String message;
     private int bestCompletionTimeSeconds;
     private int totalAttempts;
     private LocalDateTime lastCompletedAt;
-    private int totalParticipants;
-    private String message;
 }
