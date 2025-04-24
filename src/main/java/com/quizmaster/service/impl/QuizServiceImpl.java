@@ -40,7 +40,7 @@ public class QuizServiceImpl implements QuizService {
     public StartQuizResponse startQuiz(StartQuizRequest request) {
         // Check if a user with the same iNumber has already taken the quiz
         if (hasUserAlreadyTakenQuiz(request.getINumber())) {
-            throw new QuizException("A user with this I-Number has already taken the quiz. Each I-Number can only participate once.");
+            throw new QuizException("A user with this Identification Number has already taken the quiz. Each ID can only participate once.");
         }
         
         // Generate a unique session ID

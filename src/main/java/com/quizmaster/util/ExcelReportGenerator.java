@@ -31,12 +31,13 @@ public class ExcelReportGenerator {
             Row headerRow = sheet.createRow(0);
             createHeaderCell(headerRow, 0, "Rank", headerStyle);
             createHeaderCell(headerRow, 1, "User Name", headerStyle);
-            createHeaderCell(headerRow, 2, "Score", headerStyle);
-            createHeaderCell(headerRow, 3, "Percentage", headerStyle);
-            createHeaderCell(headerRow, 4, "Questions", headerStyle);
-            createHeaderCell(headerRow, 5, "Correct", headerStyle);
-            createHeaderCell(headerRow, 6, "Time (sec)", headerStyle);
-            createHeaderCell(headerRow, 7, "Completed At", headerStyle);
+            createHeaderCell(headerRow, 2, "I-Number", headerStyle);
+            createHeaderCell(headerRow, 3, "Score", headerStyle);
+            createHeaderCell(headerRow, 4, "Percentage", headerStyle);
+            createHeaderCell(headerRow, 5, "Questions", headerStyle);
+            createHeaderCell(headerRow, 6, "Correct", headerStyle);
+            createHeaderCell(headerRow, 7, "Time (sec)", headerStyle);
+            createHeaderCell(headerRow, 8, "Completed At", headerStyle);
 
             // Create data rows
             for (int i = 0; i < results.size(); i++) {
@@ -45,16 +46,17 @@ public class ExcelReportGenerator {
 
                 row.createCell(0).setCellValue(result.getRank());
                 row.createCell(1).setCellValue(result.getUserName());
-                row.createCell(2).setCellValue(result.getScore());
-                row.createCell(3).setCellValue(String.format("%.2f%%", result.getPercentageScore()));
-                row.createCell(4).setCellValue(result.getTotalQuestions());
-                row.createCell(5).setCellValue(result.getCorrectAnswers());
-                row.createCell(6).setCellValue(result.getTimeTakenSeconds());
-                row.createCell(7).setCellValue(result.getCompletedAt().format(DATE_TIME_FORMATTER));
+                row.createCell(2).setCellValue(result.getINumber());
+                row.createCell(3).setCellValue(result.getScore());
+                row.createCell(4).setCellValue(String.format("%.2f%%", result.getPercentageScore()));
+                row.createCell(5).setCellValue(result.getTotalQuestions());
+                row.createCell(6).setCellValue(result.getCorrectAnswers());
+                row.createCell(7).setCellValue(result.getTimeTakenSeconds());
+                row.createCell(8).setCellValue(result.getCompletedAt().format(DATE_TIME_FORMATTER));
             }
 
             // Auto-size columns
-            for (int i = 0; i < 8; i++) {
+            for (int i = 0; i < 9; i++) {
                 sheet.autoSizeColumn(i);
             }
 

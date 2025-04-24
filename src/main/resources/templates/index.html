@@ -19,7 +19,7 @@
                 <div class="card-body">
                     <div class="welcome-section text-center">
                         <h2 class="mb-4">Welcome to CXS Quiz Master!</h2>
-                        <p class="lead mb-4">Test your knowledge for the CXS Architecture Summit</p>
+                        <p class="lead mb-4">Test your knowledge for the CXS Architecture Series</p>
 
                         <div class="name-form mt-5">
                             <div class="form-group mb-3">
@@ -27,9 +27,9 @@
                                 <input type="text" class="form-control form-control-lg" id="userName" placeholder="Your name">
                             </div>
                             <div class="form-group mb-3">
-                                <label for="iNumber" class="form-label">Enter Your I-Number</label>
-                                <input type="text" class="form-control form-control-lg" id="iNumber" placeholder="Your I-Number (e.g., I123456)">
-                                <small class="form-text text-muted">Each I-Number can only take the quiz once</small>
+                                <label for="iNumber" class="form-label">Enter Your Identification Number</label>
+                                <input type="text" class="form-control form-control-lg" id="iNumber" placeholder="Your ID (e.g., I123456, C93435, or D02345)">
+                                <small class="form-text text-muted">Each identification number can only take the quiz once</small>
                             </div>
                             <button id="startButton" class="btn btn-primary btn-lg w-100 mt-3">Start Quiz</button>
                         </div>
@@ -67,12 +67,12 @@
             }
             
             if (!iNumber) {
-                alert('Please enter your I-Number to start the quiz');
+                alert('Please enter your Identification Number to start the quiz');
                 return;
             }
             
-            if (!iNumber.match(/^I\d+$/i)) {
-                alert('Please enter a valid I-Number (format: I followed by numbers)');
+            if (!iNumber.match(/^[ICD]\d+$/i)) {
+                alert('Please enter a valid identifier (format: I, C, or D followed by numbers)');
                 return;
             }
 
