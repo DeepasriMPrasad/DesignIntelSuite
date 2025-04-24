@@ -133,11 +133,25 @@
         questionScreen.style.display = 'none';
         quizCompleteScreen.style.display = 'none';
 
+        // Add debug info to loading screen
+        document.querySelector('#loadingScreen p').textContent = 
+            `Loading your question... (Session: ${sessionId})`;
+
         // Hide previous feedback
         feedbackElement.style.display = 'none';
 
         console.log("Fetching question with sessionId:", sessionId);
+        console.log("Context path:", contextPath);
         console.log("Loading screen is now visible");
+
+        // Check if we have a valid session
+        if (!sessionId) {
+            showToast("No session ID found. Redirecting to start page...", "warning");
+            setTimeout(() => {
+                window.location.href = contextPath;
+            }, 1500);
+            return;
+        }
 
         // Reset flags and state
         isSubmitting = false;
@@ -188,9 +202,13 @@
             })
             .catch(error => {
                 console.error('ERROR: Failed to fetch question:', error);
+                document.querySelector('#loadingScreen p').textContent = 
+                    `Error loading question. Checking session status...`;
 
                 // Check if this is an invalid session or no more questions error
-                if (error.response && error.response.data && error.response.data.error) {
+                if (error.response && error.response.data) {
+                    console.log("Error response:", error.response.data);
+                    const errorMsg = error.response.data.error || error.response.data.message || '';
                     const errorMsg = error.response.data.error;
                     console.log("Error message from API:", errorMsg);
 
