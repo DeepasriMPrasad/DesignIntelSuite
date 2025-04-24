@@ -30,7 +30,11 @@ public class QuizServiceTest {
 
     private Question sampleQuestion;
     private List<Question> mockQuestions;
-//fix issues
+
+    @Mock
+    private QuizRankingService quizRankingService;
+
+
     @BeforeEach
     void setUp() {
         // Create a sample question
