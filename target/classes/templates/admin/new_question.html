@@ -101,7 +101,7 @@
                 </div>
                 <div class="form-group">
                     <label>
-                        <input type="radio" name="correctOption" value="${optionCount}" required>
+                        <input type="checkbox" name="correctOption_${optionCount}">
                         Correct Answer
                     </label>
                 </div>
@@ -112,31 +112,32 @@
         
         function prepareSubmit() {
             const form = document.getElementById('new-question-form');
-            const correctOptionRadios = document.getElementsByName('correctOption');
-            let selectedOptionIndex = -1;
             
-            for (let i = 0; i < correctOptionRadios.length; i++) {
-                if (correctOptionRadios[i].checked) {
-                    selectedOptionIndex = correctOptionRadios[i].value;
-                    break;
-                }
-            }
-            
-            if (selectedOptionIndex === -1) {
-                alert('Please select a correct answer.');
-                return false;
-            }
-            
-            // Add hidden fields for correct property
+            // Get all options and create hidden fields for the correct property
             const optionsContainer = document.getElementById('options-container');
             const optionCount = optionsContainer.children.length;
+            let hasCorrectAnswer = false;
             
             for (let i = 0; i < optionCount; i++) {
+                const checkbox = document.getElementsByName(`correctOption_${i}`)[0];
+                const isCorrect = checkbox && checkbox.checked;
+                
+                if (isCorrect) {
+                    hasCorrectAnswer = true;
+                }
+                
                 const correctInput = document.createElement('input');
                 correctInput.type = 'hidden';
                 correctInput.name = `options[${i}].correct`;
-                correctInput.value = (i.toString() === selectedOptionIndex.toString()) ? 'true' : 'false';
+                correctInput.value = isCorrect ? 'true' : 'false';
                 form.appendChild(correctInput);
+            }
+            
+            // Make sure there's at least one correct answer (not required, but good practice)
+            if (!hasCorrectAnswer) {
+                if (!confirm('No correct answers selected. Are you sure you want to continue?')) {
+                    return false;
+                }
             }
             
             return true;
