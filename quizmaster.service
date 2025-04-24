@@ -1,0 +1,17 @@
+[Unit]
+Description=CXS Quiz Master Spring Boot Application
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USER
+WorkingDirectory=/path/to/quizmaster
+ExecStart=/usr/bin/java -jar target/quizmaster.jar --spring.profiles.active=prod
+Restart=on-failure
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=quizmaster
+
+[Install]
+WantedBy=multi-user.target
