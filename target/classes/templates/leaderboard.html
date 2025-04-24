@@ -21,8 +21,8 @@
         <div class="row mb-4">
             <div class="col text-center">
                 <h1 class="display-4">CXS Quiz Leaderboard</h1>
-                <p class="lead">Top Performers</p>
-                <p class="text-muted"><em><i>Join the CXS Architecture Series : Where Today's Discussions Build Tomorrow's Solutions</i></em></p>
+                <p class="lead">CXS Architecture Series - Top Performers</p>
+                <p class="text-muted"><em>Join the CXS Architecture Series: Where Today's Discussions Build Tomorrow's Solutions</em></p>
             </div>
         </div>
         
@@ -35,6 +35,9 @@
                             <button id="adminLoginBtn" class="btn btn-sm btn-secondary me-2">
                                 <i class="fas fa-lock me-1"></i> Admin Login
                             </button>
+                            <a th:href="@{/admin/questions?password=Donotdelete1%23}" class="btn btn-sm btn-primary admin-controls me-2">
+                                <i class="fas fa-edit me-1"></i> Edit Questions
+                            </a>
                             <button id="clearLeaderboardBtn" class="btn btn-sm btn-danger admin-controls" 
                                     onclick="if(confirm('Are you sure you want to clear all leaderboard data? This cannot be undone.')) { clearLeaderboard(); }">
                                 <i class="fas fa-trash-alt me-1"></i> Clear All Entries

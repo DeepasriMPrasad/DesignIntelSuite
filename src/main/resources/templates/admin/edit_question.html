@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Question - CXS Quiz Master</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/style.css}">
+    <style>
+        .admin-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+        }
+        .btn {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .option-group {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .options-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h2>Edit Question</h2>
+            <a th:href="@{/admin/questions(password=${password})}" class="btn">Back to Questions</a>
+        </div>
+        
+        <form th:action="@{/admin/questions/update}" method="post" th:object="${question}">
+            <input type="hidden" name="password" th:value="${password}">
+            <input type="hidden" th:field="*{id}">
+            
+            <div class="form-group">
+                <label for="text">Question Text:</label>
+                <textarea id="text" th:field="*{text}" required></textarea>
+            </div>
+            
+            <div class="options-container">
+                <h3>Options</h3>
+                
+                <div th:each="option, optionStat : *{options}" class="option-group">
+                    <div class="option-header">
+                        <h4>Option #<span th:text="${optionStat.index + 1}"></span></h4>
+                    </div>
+                    
+                    <input type="hidden" th:field="*{options[__${optionStat.index}__].id}">
+                    
+                    <div class="form-group">
+                        <label th:for="${'options[' + optionStat.index + '].text'}">Option Text:</label>
+                        <input type="text" th:field="*{options[__${optionStat.index}__].text}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="radio" th:field="*{options[__${optionStat.index}__].correct}" th:value="true">
+                            Correct Answer
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success">Update Question</button>
+        </form>
+    </div>
+</body>
+</html>

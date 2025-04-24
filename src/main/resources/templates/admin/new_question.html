@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Question - CXS Quiz Master</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/style.css}">
+    <style>
+        .admin-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+        }
+        .btn {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .option-group {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .options-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .add-option-btn {
+            padding: 5px 10px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+    </style>
+    <script>
+        function addOption() {
+            const optionsContainer = document.getElementById('options-container');
+            const optionCount = optionsContainer.children.length;
+            
+            const optionGroup = document.createElement('div');
+            optionGroup.className = 'option-group';
+            
+            optionGroup.innerHTML = `
+                <div class="option-header">
+                    <h4>Option #${optionCount + 1}</h4>
+                </div>
+                <div class="form-group">
+                    <label for="options${optionCount}.text">Option Text:</label>
+                    <input type="text" id="options${optionCount}.text" name="options[${optionCount}].text" required>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="correctOption" value="${optionCount}" required>
+                        Correct Answer
+                    </label>
+                </div>
+            `;
+            
+            optionsContainer.appendChild(optionGroup);
+        }
+        
+        function prepareSubmit() {
+            const form = document.getElementById('new-question-form');
+            const correctOptionRadios = document.getElementsByName('correctOption');
+            let selectedOptionIndex = -1;
+            
+            for (let i = 0; i < correctOptionRadios.length; i++) {
+                if (correctOptionRadios[i].checked) {
+                    selectedOptionIndex = correctOptionRadios[i].value;
+                    break;
+                }
+            }
+            
+            if (selectedOptionIndex === -1) {
+                alert('Please select a correct answer.');
+                return false;
+            }
+            
+            // Add hidden fields for correct property
+            const optionsContainer = document.getElementById('options-container');
+            const optionCount = optionsContainer.children.length;
+            
+            for (let i = 0; i < optionCount; i++) {
+                const correctInput = document.createElement('input');
+                correctInput.type = 'hidden';
+                correctInput.name = `options[${i}].correct`;
+                correctInput.value = (i.toString() === selectedOptionIndex.toString()) ? 'true' : 'false';
+                form.appendChild(correctInput);
+            }
+            
+            return true;
+        }
+    </script>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h2>Add New Question</h2>
+            <a th:href="@{/admin/questions(password=${password})}" class="btn">Back to Questions</a>
+        </div>
+        
+        <form id="new-question-form" th:action="@{/admin/questions/add}" method="post" onsubmit="return prepareSubmit()">
+            <input type="hidden" name="password" th:value="${password}">
+            
+            <div class="form-group">
+                <label for="text">Question Text:</label>
+                <textarea id="text" name="text" required></textarea>
+            </div>
+            
+            <div class="options-container">
+                <h3>Options</h3>
+                <button type="button" class="add-option-btn" onclick="addOption()">Add Option</button>
+                
+                <div id="options-container">
+                    <!-- Options will be added here dynamically -->
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success">Add Question</button>
+        </form>
+    </div>
+    
+    <script>
+        // Add initial options
+        window.onload = function() {
+            // Add 4 options by default
+            for (let i = 0; i < 4; i++) {
+                addOption();
+            }
+        };
+    </script>
+</body>
+</html>
