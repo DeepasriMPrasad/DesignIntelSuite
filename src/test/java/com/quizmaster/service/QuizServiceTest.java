@@ -30,7 +30,7 @@ public class QuizServiceTest {
 
     private Question sampleQuestion;
     private List<Question> mockQuestions;
-
+//fix issues
     @BeforeEach
     void setUp() {
         // Create a sample question
@@ -48,7 +48,7 @@ public class QuizServiceTest {
         mockQuestions = List.of(sampleQuestion);
 
         // Mock the question loader
-        when(questionLoader.loadQuestions()).thenReturn(mockQuestions);
+        lenient().when(questionLoader.loadQuestions()).thenReturn(mockQuestions);
     }
 
     @Test

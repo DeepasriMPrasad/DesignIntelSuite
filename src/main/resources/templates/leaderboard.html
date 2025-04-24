@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Master - Leaderboard</title>
+    <link rel="stylesheet" href="/quizmaster_war/static/css/style.css">
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #2196F3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .leaderboard {
+            width: 100%;
+            border-collapse: collapse;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .leaderboard th, .leaderboard td {
+            padding: 15px;
+            text-align: left;
+        }
+        .leaderboard th {
+            background-color: #2196F3;
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .leaderboard tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .leaderboard tr:hover {
+            background-color: #e3f2fd;
+        }
+        .highlight {
+            background-color: #ffecb3 !important;
+            font-weight: bold;
+        }
+        .top3 {
+            font-weight: bold;
+        }
+        .rank-1 {
+            background-color: #ffd700 !important;
+        }
+        .rank-2 {
+            background-color: #c0c0c0 !important;
+        }
+        .rank-3 {
+            background-color: #cd7f32 !important;
+        }
+        .actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0b7dda;
+        }
+        .user-stats {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Quiz Master Leaderboard</h1>
+
+    <!-- User's own stats if available -->
+    <div class="user-stats" th:if="${userRanking != null}">
+        <h2 th:text="'Your Ranking, ' + ${userName} + '!'"></h2>
+        <p>Your best score: <strong th:text="${#numbers.formatDecimal(userRanking.percentageScore, 1, 2)} + '%'"></strong></p>
+        <p>Your rank: <strong th:text="${userRanking.rank} + ' out of ' + ${userRanking.totalParticipants}"></strong></p>
+        <p>Total attempts: <strong th:text="${userRanking.totalAttempts}"></strong></p>
+        <p>Best completion time: <strong th:text="${userRanking.bestCompletionTimeSeconds} + ' seconds'"></strong></p>
+    </div>
+
+    <h2>Top Players</h2>
+    <table class="leaderboard">
+        <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Score</th>
+            <th>Time</th>
+            <th>Date</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="result : ${rankings}"
+            th:class="${result.userName == userName ? 'highlight' : ''} +
+                             ${result.rank == 1 ? ' rank-1' : ''} +
+                             ${result.rank == 2 ? ' rank-2' : ''} +
+                             ${result.rank == 3 ? ' rank-3' : ''}">
+            <td th:text="${result.rank}"></td>
+            <td th:text="${result.userName}"></td>
+            <td th:text="${#numbers.formatDecimal(result.percentageScore, 1, 2)} + '%'"></td>
+            <td th:text="${result.timeTakenSeconds} + ' sec'"></td>
+            <td th:text="${#temporals.format(result.completedAt, 'dd MMM yyyy HH:mm')}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="actions">
+        <a href="/quizmaster_war/" class="btn">Home</a>
+        <a href="/quizmaster_war/quiz" class="btn">Take Another Quiz</a>
+        <a href="/quizmaster_war/api/rankings/download/excel" class="btn">Download Complete Rankings</a>
+    </div>
+</div>
+</body>
+</html>

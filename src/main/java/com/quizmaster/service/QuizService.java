@@ -2,6 +2,8 @@ package com.quizmaster.service;
 
 import com.quizmaster.model.dto.*;
 
+import java.awt.print.PrinterJob;
+
 public interface QuizService {
     
     /**
@@ -43,4 +45,6 @@ public interface QuizService {
      * @return The final results of the quiz
      */
     EndQuizResponse endQuiz(String sessionId);
+
+    String getSessionUserName(String sessionId);
 }
