@@ -12,6 +12,49 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Add a script to suppress WebSocket errors in the browser console
+st.markdown('''
+<script>
+// Override WebSocket to suppress connection errors in console
+(function() {
+    // Store original WebSocket
+    const OrigWebSocket = window.WebSocket;
+    
+    // Create a no-op console error handler
+    const noopConsoleError = function() {};
+    
+    // Replace WebSocket with our version
+    window.WebSocket = function(url, protocols) {
+        const ws = new OrigWebSocket(url, protocols);
+        
+        // Override the onerror handler to suppress console errors
+        const origOnError = ws.onerror;
+        ws.onerror = function(event) {
+            // Ignore WebSocket errors in the console
+            console.error = noopConsoleError;
+            
+            // Call original handler if it exists
+            if (origOnError) origOnError.call(ws, event);
+            
+            // Restore console.error
+            setTimeout(function() {
+                console.error = console.__error || console.error;
+            }, 100);
+        };
+        
+        return ws;
+    };
+    
+    // Copy properties from original WebSocket
+    for (let prop in OrigWebSocket) {
+        if (OrigWebSocket.hasOwnProperty(prop)) {
+            window.WebSocket[prop] = OrigWebSocket[prop];
+        }
+    }
+})();
+</script>
+''', unsafe_allow_html=True)
+
 # Set fixed API URL for the external server with Replit-compatible URLs
 # Updated to use correct port (5000) and context path (/quizmaster)
 API_BASE_URL = "http://0.0.0.0:5000/quizmaster/api/quiz"

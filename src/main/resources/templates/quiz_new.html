@@ -563,47 +563,7 @@
             });
     }
 
-    // Function to celebrate a perfect score with confetti
-    function celebratePerfectScore() {
-        console.log("Celebrating perfect score with confetti!");
-        
-        // Check if confetti is available
-        if (typeof confetti === 'undefined') {
-            console.error("Confetti library not loaded.");
-            return;
-        }
-        
-        try {
-            // First blast
-            confetti({
-                particleCount: 200,
-                spread: 150,
-                origin: { y: 0.6 }
-            });
-            
-            // Second blast after a short delay
-            setTimeout(function() {
-                confetti({
-                    particleCount: 150,
-                    angle: 60,
-                    spread: 80,
-                    origin: { x: 0 }
-                });
-            }, 500);
-            
-            // Third blast after another delay
-            setTimeout(function() {
-                confetti({
-                    particleCount: 150,
-                    angle: 120,
-                    spread: 80,
-                    origin: { x: 1 }
-                });
-            }, 1000);
-        } catch (error) {
-            console.error("Error creating confetti effect:", error);
-        }
-    }
+    // This second implementation of celebratePerfectScore was removed as it was a duplicate
 
     // Direct DOM event binding instead of using addEventListener
     document.onreadystatechange = function() {
