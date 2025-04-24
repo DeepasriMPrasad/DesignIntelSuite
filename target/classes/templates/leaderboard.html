@@ -96,9 +96,16 @@
     <script th:inline="javascript">
     // Function to clear leaderboard
     function clearLeaderboard() {
-        const contextPath = /*[[@{/}]]*/ '';
+        let contextPath = /*[[@{/}]]*/ '';
+        // Ensure context path has proper trailing slash
+        if (!contextPath.endsWith('/')) {
+            contextPath += '/';
+        }
+        console.log("Using context path for API calls:", contextPath);
         
-        axios.post(contextPath + 'api/quiz/admin/clear-leaderboard')
+        const clearUrl = contextPath + 'api/quiz/admin/clear-leaderboard';
+        console.log("Clearing leaderboard with URL:", clearUrl);
+        axios.post(clearUrl)
             .then(function(response) {
                 showToast('Leaderboard data cleared successfully', 'success');
                 // Reload the page after a short delay
