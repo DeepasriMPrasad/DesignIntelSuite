@@ -209,7 +209,6 @@
                 if (error.response && error.response.data) {
                     console.log("Error response:", error.response.data);
                     const errorMsg = error.response.data.error || error.response.data.message || '';
-                    const errorMsg = error.response.data.error;
                     console.log("Error message from API:", errorMsg);
 
                     if (errorMsg.includes("Invalid or expired session ID")) {
