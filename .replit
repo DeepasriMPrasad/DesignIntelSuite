@@ -1,36 +1,81 @@
-modules = ["java-17:v26-20240215-0bd73cd"]
+modules = ["python-3.11", "java"]
+
 [nix]
 channel = "stable-24_05"
 packages = ["maven"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["mvn", "spring-boot:run"]
+run = ["streamlit", "run", "app.py", "--server.port", "5000"]
 
-[runButton]
-name = "Run Spring Boot App"
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Spring Boot Application"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "quiz-master-spring-boot"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Streamlit Client"
+
+[[workflows.workflow]]
+name = "Spring Boot Application"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn spring-boot:run"
+waitForPort = 8000
+
+[[workflows.workflow]]
+name = "quiz-master-spring-boot"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn spring-boot:run"
+
+[[workflows.workflow]]
+name = "Streamlit Client"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run app.py"
+waitForPort = 5000
 
 [[ports]]
-localPort = 7090
+localPort = 5000
+externalPort = 5000
+
+[[ports]]
+localPort = 8000
 externalPort = 80
-
-[env]
-SPRING_PROFILES_ACTIVE = "production"
-
-[packager]
-language = "java"
-
-[packager.features]
-packageSearch = true
-
-[languages.java]
-pattern = "**/*.java"
-
-[languages.java.languageServer]
-start = "jdt-language-server"
-
-[unitTest]
-language = "java"
-
-[nix.channel]
-channel = "stable-24_05"
