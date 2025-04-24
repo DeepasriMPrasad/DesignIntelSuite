@@ -54,6 +54,10 @@ public class WebController {
         // Get top 10 results
         List<QuizResult> topResults = quizRankingService.getTopResults(10);
         model.addAttribute("rankings", topResults);
+        
+        // Get the total number of participants
+        List<QuizResult> allResults = quizRankingService.getAllResults();
+        model.addAttribute("totalParticipants", allResults.size());
 
         // Add the user's ranking if provided
         if (userName != null && !userName.isEmpty()) {
