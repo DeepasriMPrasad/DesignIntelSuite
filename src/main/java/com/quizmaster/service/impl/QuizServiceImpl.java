@@ -5,9 +5,11 @@ import com.quizmaster.model.Option;
 import com.quizmaster.model.Question;
 import com.quizmaster.model.QuizSession;
 import com.quizmaster.model.dto.*;
+import com.quizmaster.service.QuizRankingService;
 import com.quizmaster.service.QuizService;
 import com.quizmaster.util.ExcelQuestionLoader;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -15,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class QuizServiceImpl implements QuizService {
     
     private final ExcelQuestionLoader questionLoader;
@@ -23,7 +24,16 @@ public class QuizServiceImpl implements QuizService {
     
     private final int MAX_QUESTIONS_PER_SESSION = 5;
     private final int MAX_ATTEMPTS_PER_QUESTION = 3;
-    
+
+    private final QuizRankingService quizRankingService;
+
+    @Autowired
+    public QuizServiceImpl(ExcelQuestionLoader questionLoader, QuizRankingService quizRankingService) {
+        this.questionLoader = questionLoader;
+        this.quizRankingService = quizRankingService;
+        // Other initialization...
+    }
+
     @Override
     public StartQuizResponse startQuiz(StartQuizRequest request) {
         // Generate a unique session ID
@@ -226,7 +236,7 @@ public class QuizServiceImpl implements QuizService {
                 .percentageScore(calculatePercentageScore(session))
                 .build();
     }
-    
+
     @Override
     public EndQuizResponse endQuiz(String sessionId) {
         // Try to get the session, creating a new one if needed for graceful error handling
@@ -245,12 +255,12 @@ public class QuizServiceImpl implements QuizService {
                     .message("Quiz completed with errors")
                     .build();
         }
-        
+
         // Mark the session as inactive
         session.setActive(false);
         session.setEndTime(new Date());
         quizSessions.put(sessionId, session);
-        
+
         return EndQuizResponse.builder()
                 .sessionId(sessionId)
                 .userName(session.getUserName())
@@ -261,7 +271,7 @@ public class QuizServiceImpl implements QuizService {
                 .message("Quiz completed successfully")
                 .build();
     }
-    
+
     private QuizSession getValidSession(String sessionId) {
         if (sessionId == null || sessionId.trim().isEmpty()) {
             throw new QuizException("Session ID cannot be empty");
@@ -312,4 +322,12 @@ public class QuizServiceImpl implements QuizService {
         Date endTime = session.getEndTime() != null ? session.getEndTime() : new Date();
         return (endTime.getTime() - session.getStartTime().getTime()) / 1000; // Duration in seconds
     }
+
+// Add implementation for getSessionUserName
+@Override
+public String getSessionUserName(String sessionId) {
+    QuizSession session = getValidSession(sessionId);
+    return session.getUserName();
+}
+
 }

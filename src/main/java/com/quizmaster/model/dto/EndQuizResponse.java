@@ -17,4 +17,5 @@ public class EndQuizResponse {
     private double percentageScore;
     private long duration; // in seconds
     private String message;
+    private int score;
 }

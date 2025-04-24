@@ -1,5 +1,7 @@
 package com.quizmaster.controller;
 
+import com.quizmaster.model.QuizResult;
+import com.quizmaster.service.QuizRankingService;
 import com.quizmaster.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -8,6 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 /**
  * Controller for web views
  */
@@ -15,10 +19,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class WebController {
 
     private final QuizService quizService;
+    private final QuizRankingService quizRankingService;
 
     @Autowired
-    public WebController(QuizService quizService) {
+    public WebController(QuizService quizService, QuizRankingService quizRankingService) {
         this.quizService = quizService;
+        this.quizRankingService = quizRankingService;
     }
 
     /**
@@ -36,5 +42,23 @@ public class WebController {
     public String quiz(@RequestParam(required = false) String sessionId, Model model) {
         model.addAttribute("sessionId", sessionId != null ? sessionId : "");
         return "quiz_new";
+    }
+
+    /**
+     * Leaderboard page
+     */
+    @GetMapping("/leaderboard")
+    public String leaderboard(@RequestParam(required = false) String userName, Model model) {
+        // Get top 10 results
+        List<QuizResult> topResults = quizRankingService.getTopResults(10);
+        model.addAttribute("rankings", topResults);
+
+        // Add the user's ranking if provided
+        if (userName != null && !userName.isEmpty()) {
+            model.addAttribute("userRanking", quizRankingService.getUserRanking(userName));
+            model.addAttribute("userName", userName);
+        }
+
+        return "leaderboard";
     }
 }
