@@ -2,15 +2,14 @@ modules = ["python-3.11", "java"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["maven", "zip"]
+packages = ["maven"]
 
 [deployment]
-deploymentTarget = "cloudrun"
-run = ["sh", "-c", "java -jar target/quizmaster.jar --server.port=5000 --server.address=0.0.0.0"]
-build = ["sh", "-c", "mvn clean install package -DskipTests"]
+deploymentTarget = "autoscale"
+run = ["streamlit", "run", "app.py", "--server.port", "5000"]
 
 [workflows]
-runButton = "Quiz Master Application"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -19,10 +18,18 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Quiz Master Application"
+args = "Spring Boot Application"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "quiz-master-spring-boot"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Streamlit Client"
 
 [[workflows.workflow]]
-name = "Quiz Master Application"
+name = "Spring Boot Application"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -34,6 +41,35 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "mvn spring-boot:run"
+waitForPort = 8000
+
+[[workflows.workflow]]
+name = "quiz-master-spring-boot"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn spring-boot:run"
+
+[[workflows.workflow]]
+name = "Streamlit Client"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "streamlit run app.py"
 waitForPort = 5000
 
 [[ports]]
@@ -43,19 +79,3 @@ externalPort = 5000
 [[ports]]
 localPort = 8000
 externalPort = 80
-
-[[ports]]
-localPort = 8080
-externalPort = 8080
-
-[[ports]]
-localPort = 8081
-externalPort = 8081
-
-[[ports]]
-localPort = 8501
-externalPort = 3001
-
-[[ports]]
-localPort = 35729
-externalPort = 3000
