@@ -6,7 +6,8 @@ packages = ["maven"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["streamlit", "run", "app.py", "--server.port", "5000"]
+run = ["sh", "-c", "bash deploy.sh"]
+build = ["sh", "-c", "mvn clean install package -DskipTests"]
 
 [workflows]
 runButton = "Project"
@@ -46,3 +47,7 @@ externalPort = 3001
 [[ports]]
 localPort = 8000
 externalPort = 80
+
+[[ports]]
+localPort = 35729
+externalPort = 3000
