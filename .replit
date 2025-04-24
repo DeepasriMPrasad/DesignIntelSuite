@@ -10,7 +10,7 @@ run = ["sh", "-c", "bash deploy.sh"]
 build = ["sh", "-c", "mvn clean install package -DskipTests"]
 
 [workflows]
-runButton = "Project"
+runButton = "Quiz Master"
 
 [[workflows.workflow]]
 name = "Project"
@@ -54,6 +54,15 @@ task = "packager.installForAll"
 task = "shell.exec"
 args = "mvn spring-boot:run"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Quiz Master"
+author = 5674785
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn spring-boot:run -Dspring-boot.run.arguments=\"--server.port=5000\""
 
 [[ports]]
 localPort = 5000
