@@ -192,9 +192,18 @@
         // Add a timeout to help debug if there's a network issue
         console.log("Starting API request now...");
         
-        axios.get(questionUrl)
+        // Add request timeout and better error handling
+        axios.get(questionUrl, {
+            timeout: 10000,  // 10 second timeout
+            validateStatus: function (status) {
+                return status >= 200 && status < 500; // Handle 4xx errors explicitly
+            }
+        })
             .then(response => {
                 console.log("SUCCESS: Question fetch response received:", response.data);
+                if (!response.data) {
+                    throw new Error('Empty response received');
+                }
                 currentQuestion = response.data;
                 displayQuestion(currentQuestion);
                 loadingScreen.style.display = 'none';
@@ -236,11 +245,16 @@
                     return;
                 }
 
-                // Generic error handling
-                showToast('Failed to fetch question. Returning to start page.', 'danger');
-                setTimeout(() => {
-                    window.location.href = contextPath;
-                }, 2500);
+                // Generic error handling with more details
+                const errorMessage = error.message || 'Network error occurred';
+                console.error('Detailed error:', error);
+                showToast(`Failed to fetch question: ${errorMessage}. Please try again.`, 'danger');
+                
+                // Show error on loading screen instead of redirecting
+                document.querySelector('#loadingScreen p').textContent = 
+                    `Error: ${errorMessage}. Click here to try again.`;
+                document.querySelector('#loadingScreen p').style.cursor = 'pointer';
+                document.querySelector('#loadingScreen p').onclick = fetchQuestion;
             });
     }
 
