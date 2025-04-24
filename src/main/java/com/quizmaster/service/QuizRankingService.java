@@ -49,6 +49,14 @@ public interface QuizRankingService {
     void clearAllResults() throws IOException;
     
     /**
+     * Deletes a specific quiz result by ID
+     * 
+     * @param id the ID of the quiz result to delete
+     * @throws IOException if an error occurs while deleting the result
+     */
+    void deleteQuizResult(Long id) throws IOException;
+    
+    /**
      * Checks if a user with the given I-Number has already taken the quiz
      * 
      * @param iNumber the I-Number to check

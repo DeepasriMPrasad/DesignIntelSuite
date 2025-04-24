@@ -9,4 +9,5 @@ public interface QuizResultRepository {
     void saveResult(QuizResult result);
     List<QuizResult> getAllResults();
     void clearAllResults() throws IOException;
+    void saveAllResults(List<QuizResult> results) throws IOException;
 }

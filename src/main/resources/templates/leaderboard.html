@@ -7,9 +7,17 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/static/css/style.css}"/>
+    <style>
+        .admin-controls {
+            display: none;
+        }
+        .admin-mode .admin-controls {
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
+    <div class="container mt-5" id="appContainer">
         <div class="row mb-4">
             <div class="col text-center">
                 <h1 class="display-4">CXS Quiz Leaderboard</h1>
@@ -23,9 +31,12 @@
                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Top Scores</h5>
                         <div>
-                            <button id="clearLeaderboardBtn" class="btn btn-sm btn-danger" 
+                            <button id="adminLoginBtn" class="btn btn-sm btn-secondary me-2">
+                                <i class="fas fa-lock me-1"></i> Admin Login
+                            </button>
+                            <button id="clearLeaderboardBtn" class="btn btn-sm btn-danger admin-controls" 
                                     onclick="if(confirm('Are you sure you want to clear all leaderboard data? This cannot be undone.')) { clearLeaderboard(); }">
-                                <i class="fas fa-trash-alt me-1"></i> Clear Leaderboard (Admin)
+                                <i class="fas fa-trash-alt me-1"></i> Clear All Entries
                             </button>
                         </div>
                     </div>
@@ -41,6 +52,7 @@
                                         <th scope="col">Percentage</th>
                                         <th scope="col">Time (sec)</th>
                                         <th scope="col">Date</th>
+                                        <th scope="col" class="admin-controls">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -66,9 +78,15 @@
                                         </td>
                                         <td th:text="${result.timeTakenSeconds}">25</td>
                                         <td th:text="${#temporals.format(result.completedAt, 'yyyy-MM-dd HH:mm')}">2025-04-24</td>
+                                        <td class="admin-controls">
+                                            <button class="btn btn-sm btn-danger" 
+                                                    th:onclick="'if(confirm(\'Are you sure you want to delete this entry?\')) { deleteQuizResult(' + ${result.id} + '); }'">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                     <tr th:if="${#lists.isEmpty(rankings)}">
-                                        <td colspan="7" class="text-center">No quiz results available yet.</td>
+                                        <td colspan="8" class="text-center">No quiz results available yet.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -90,19 +108,52 @@
         </div>
     </div>
     
+    <!-- Admin Login Modal -->
+    <div class="modal fade" id="adminLoginModal" tabindex="-1" aria-labelledby="adminLoginModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adminLoginModalLabel">Admin Login</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="adminPassword" class="form-label">Admin Password</label>
+                        <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password">
+                        <div id="passwordError" class="text-danger mt-2" style="display: none;">
+                            Incorrect password. Please try again.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="loginButton">Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script th:src="@{/static/js/scripts.js}"></script>
     <script th:inline="javascript">
+    let contextPath = /*[[@{/}]]*/ '';
+    // Ensure context path has proper trailing slash
+    if (!contextPath.endsWith('/')) {
+        contextPath += '/';
+    }
+    console.log("Using context path for API calls:", contextPath);
+    
+    // Check if user is already in admin mode
+    function checkAdminMode() {
+        const isAdmin = sessionStorage.getItem('adminMode') === 'true';
+        if (isAdmin) {
+            document.getElementById('appContainer').classList.add('admin-mode');
+        }
+    }
+    
     // Function to clear leaderboard
     function clearLeaderboard() {
-        let contextPath = /*[[@{/}]]*/ '';
-        // Ensure context path has proper trailing slash
-        if (!contextPath.endsWith('/')) {
-            contextPath += '/';
-        }
-        console.log("Using context path for API calls:", contextPath);
-        
         const clearUrl = contextPath + 'api/quiz/admin/clear-leaderboard';
         console.log("Clearing leaderboard with URL:", clearUrl);
         axios.post(clearUrl)
@@ -118,6 +169,71 @@
                 showToast('Failed to clear leaderboard data. Please try again.', 'error');
             });
     }
+    
+    // Function to delete individual quiz result
+    function deleteQuizResult(id) {
+        const deleteUrl = contextPath + 'api/quiz/admin/delete-result?id=' + id;
+        console.log("Deleting quiz result with URL:", deleteUrl);
+        axios.post(deleteUrl)
+            .then(function(response) {
+                showToast('Quiz result deleted successfully', 'success');
+                // Reload the page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            })
+            .catch(function(error) {
+                console.error('Error deleting quiz result:', error);
+                showToast('Failed to delete quiz result. Please try again.', 'error');
+            });
+    }
+    
+    // Initialize admin login functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if user is in admin mode
+        checkAdminMode();
+        
+        // Admin login button
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        const adminLoginModal = new bootstrap.Modal(document.getElementById('adminLoginModal'));
+        
+        adminLoginBtn.addEventListener('click', function() {
+            // If already in admin mode, log out
+            if (sessionStorage.getItem('adminMode') === 'true') {
+                sessionStorage.removeItem('adminMode');
+                document.getElementById('appContainer').classList.remove('admin-mode');
+                adminLoginBtn.innerHTML = '<i class="fas fa-lock me-1"></i> Admin Login';
+                showToast('Logged out of admin mode', 'info');
+            } else {
+                // Show login modal
+                adminLoginModal.show();
+            }
+        });
+        
+        // Login button click handler
+        document.getElementById('loginButton').addEventListener('click', function() {
+            const password = document.getElementById('adminPassword').value;
+            const errorElement = document.getElementById('passwordError');
+            
+            // Check password (hardcoded for demo purposes)
+            if (password === 'Donotdelete1#') {
+                // Set admin mode in session storage
+                sessionStorage.setItem('adminMode', 'true');
+                document.getElementById('appContainer').classList.add('admin-mode');
+                adminLoginBtn.innerHTML = '<i class="fas fa-unlock me-1"></i> Exit Admin Mode';
+                
+                // Hide error, close modal and clear password
+                errorElement.style.display = 'none';
+                adminLoginModal.hide();
+                document.getElementById('adminPassword').value = '';
+                
+                showToast('Admin mode activated', 'success');
+            } else {
+                // Show error
+                errorElement.style.display = 'block';
+            }
+        });
+    });
     </script>
 </body>
 </html>

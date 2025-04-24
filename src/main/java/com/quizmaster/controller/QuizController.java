@@ -104,6 +104,18 @@ public class QuizController {
             return ResponseEntity.status(500).body("Error clearing leaderboard data: " + e.getMessage());
         }
     }
-
+    
+    @Operation(summary = "Delete individual quiz result (Admin only)",
+            description = "Deletes a specific quiz result from the leaderboard")
+    @ApiResponse(responseCode = "200", description = "Quiz result deleted successfully")
+    @PostMapping("/admin/delete-result")
+    public ResponseEntity<String> deleteQuizResult(@RequestParam Long id) {
+        try {
+            quizRankingService.deleteQuizResult(id);
+            return ResponseEntity.ok("Quiz result deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error deleting quiz result: " + e.getMessage());
+        }
+    }
 
 }

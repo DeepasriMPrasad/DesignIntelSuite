@@ -79,6 +79,64 @@ public class FileQuizResultRepository implements QuizResultRepository {
             lock.writeLock().unlock();
         }
     }
+    
+    @Override
+    public void saveAllResults(List<QuizResult> results) throws IOException {
+        try {
+            lock.writeLock().lock();
+            
+            File file = new File(getFilePath());
+            if (file.exists()) {
+                file.delete();
+            }
+            
+            if ("excel".equalsIgnoreCase(storageType)) {
+                Workbook workbook = createExcelFile();
+                Sheet sheet = workbook.getSheetAt(0);
+                
+                for (int i = 0; i < results.size(); i++) {
+                    QuizResult result = results.get(i);
+                    Row row = sheet.createRow(i + 1); // +1 because row 0 is the header
+                    
+                    row.createCell(0).setCellValue(result.getUserName());
+                    row.createCell(1).setCellValue(result.getScore());
+                    row.createCell(2).setCellValue(result.getPercentageScore());
+                    row.createCell(3).setCellValue(result.getTotalQuestions());
+                    row.createCell(4).setCellValue(result.getCorrectAnswers());
+                    row.createCell(5).setCellValue(result.getTimeTakenSeconds());
+                    row.createCell(6).setCellValue(result.getCompletedAt().format(DATE_TIME_FORMATTER));
+                }
+                
+                try (FileOutputStream fos = new FileOutputStream(getFilePath())) {
+                    workbook.write(fos);
+                }
+                workbook.close();
+            } else {
+                // For CSV, create the file first with headers
+                createCsvFile();
+                
+                // Then append all results
+                try (FileWriter fw = new FileWriter(getFilePath(), true);
+                     BufferedWriter bw = new BufferedWriter(fw)) {
+                    
+                    for (QuizResult result : results) {
+                        String line = String.format("%s,%d,%.2f,%d,%d,%d,%s\n",
+                                result.getUserName(),
+                                result.getScore(),
+                                result.getPercentageScore(),
+                                result.getTotalQuestions(),
+                                result.getCorrectAnswers(),
+                                result.getTimeTakenSeconds(),
+                                result.getCompletedAt().format(DATE_TIME_FORMATTER));
+                        
+                        bw.write(line);
+                    }
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
 
     // Excel implementation
     private void saveToExcel(QuizResult result) {

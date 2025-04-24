@@ -102,6 +102,12 @@ public class JpaQuizRankingService implements QuizRankingService {
     }
     
     @Override
+    public void deleteQuizResult(Long id) throws IOException {
+        log.debug("Deleting quiz result with ID: {}", id);
+        quizResultRepository.deleteById(id);
+    }
+    
+    @Override
     public boolean hasUserWithINumberTakenQuiz(String iNumber) {
         log.debug("Checking if user with I-Number {} has already taken the quiz", iNumber);
         if (iNumber == null || iNumber.trim().isEmpty()) {

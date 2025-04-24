@@ -84,6 +84,20 @@ public class QuizRankingServiceImpl implements QuizRankingService {
     }
     
     @Override
+    public void deleteQuizResult(Long id) throws IOException {
+        // Get all results
+        List<QuizResult> results = quizResultRepository.getAllResults();
+        
+        // Find and remove the result with the given ID
+        boolean removed = results.removeIf(result -> result.getId() != null && result.getId().equals(id));
+        
+        if (removed) {
+            // Save the updated list back
+            quizResultRepository.saveAllResults(results);
+        }
+    }
+    
+    @Override
     public boolean hasUserWithINumberTakenQuiz(String iNumber) {
         // For file-based implementation, we need to check all results
         if (iNumber == null || iNumber.trim().isEmpty()) {
