@@ -10,6 +10,7 @@ import com.quizmaster.service.QuizService;
 import com.quizmaster.util.ExcelQuestionLoader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -28,7 +29,8 @@ public class QuizServiceImpl implements QuizService {
     private final QuizRankingService quizRankingService;
 
     @Autowired
-    public QuizServiceImpl(ExcelQuestionLoader questionLoader, QuizRankingService quizRankingService) {
+    public QuizServiceImpl(ExcelQuestionLoader questionLoader, 
+                          @Qualifier("jpaQuizRankingService") QuizRankingService quizRankingService) {
         this.questionLoader = questionLoader;
         this.quizRankingService = quizRankingService;
         // Other initialization...
@@ -36,6 +38,11 @@ public class QuizServiceImpl implements QuizService {
 
     @Override
     public StartQuizResponse startQuiz(StartQuizRequest request) {
+        // Check if a user with the same iNumber has already taken the quiz
+        if (hasUserAlreadyTakenQuiz(request.getINumber())) {
+            throw new QuizException("A user with this I-Number has already taken the quiz. Each I-Number can only participate once.");
+        }
+        
         // Generate a unique session ID
         String sessionId = UUID.randomUUID().toString();
         
@@ -43,6 +50,7 @@ public class QuizServiceImpl implements QuizService {
         QuizSession session = QuizSession.builder()
                 .sessionId(sessionId)
                 .userName(request.getUserName())
+                .iNumber(request.getINumber())
                 .questions(new ArrayList<>())
                 .currentQuestionId(null)
                 .currentAttempts(0)
@@ -59,8 +67,14 @@ public class QuizServiceImpl implements QuizService {
                 .sessionId(sessionId)
                 .message("Quiz session started successfully")
                 .userName(request.getUserName())
+                .iNumber(request.getINumber())
                 .maxQuestions(MAX_QUESTIONS_PER_SESSION)
                 .build();
+    }
+    
+    private boolean hasUserAlreadyTakenQuiz(String iNumber) {
+        // Check if the iNumber exists in the database
+        return quizRankingService.hasUserWithINumberTakenQuiz(iNumber);
     }
     
     @Override
@@ -230,6 +244,7 @@ public class QuizServiceImpl implements QuizService {
         return ScoreResponse.builder()
                 .sessionId(sessionId)
                 .userName(session.getUserName())
+                .iNumber(session.getINumber())
                 .totalQuestions(session.getCompletedQuestions().size())
                 .correctAnswers(session.getCorrectAnswers())
                 .quizComplete(session.getCompletedQuestions().size() >= MAX_QUESTIONS_PER_SESSION)
@@ -248,6 +263,7 @@ public class QuizServiceImpl implements QuizService {
             return EndQuizResponse.builder()
                     .sessionId(sessionId)
                     .userName("Guest")
+                    .iNumber("")
                     .totalQuestions(0)
                     .correctAnswers(0)
                     .percentageScore(0)
@@ -264,6 +280,7 @@ public class QuizServiceImpl implements QuizService {
         return EndQuizResponse.builder()
                 .sessionId(sessionId)
                 .userName(session.getUserName())
+                .iNumber(session.getINumber())
                 .totalQuestions(session.getCompletedQuestions().size())
                 .correctAnswers(session.getCorrectAnswers())
                 .percentageScore(calculatePercentageScore(session))

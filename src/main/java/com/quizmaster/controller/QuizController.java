@@ -1,6 +1,7 @@
 package com.quizmaster.controller;
 
 import com.quizmaster.model.dto.*;
+import com.quizmaster.service.QuizRankingService;
 import com.quizmaster.service.QuizResultRecorder;
 import com.quizmaster.service.QuizService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,12 +22,16 @@ public class QuizController {
 
     private final QuizService quizService;
     private final QuizResultRecorder quizResultRecorder;
+    private final QuizRankingService quizRankingService;
 
     @Autowired
-    public QuizController(QuizService quizService, 
-                         @Qualifier("jpaQuizResultRecorder") QuizResultRecorder quizResultRecorder) {
+    public QuizController(
+            QuizService quizService, 
+            @Qualifier("jpaQuizResultRecorder") QuizResultRecorder quizResultRecorder,
+            @Qualifier("jpaQuizRankingService") QuizRankingService quizRankingService) {
         this.quizService = quizService;
         this.quizResultRecorder = quizResultRecorder;
+        this.quizRankingService = quizRankingService;
     }
 
     @Operation(summary = "Health check endpoint",
@@ -85,6 +90,19 @@ public class QuizController {
         EndQuizResponse response = quizService.endQuiz(sessionId);
         quizResultRecorder.recordQuizResult(sessionId, userName, response);
         return ResponseEntity.ok(response);
+    }
+    
+    @Operation(summary = "Clear leaderboard data (Admin only)",
+            description = "Clears all quiz results from the leaderboard")
+    @ApiResponse(responseCode = "200", description = "Leaderboard data cleared successfully")
+    @PostMapping("/admin/clear-leaderboard")
+    public ResponseEntity<String> clearLeaderboard() {
+        try {
+            quizRankingService.clearAllResults();
+            return ResponseEntity.ok("Leaderboard data cleared successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error clearing leaderboard data: " + e.getMessage());
+        }
     }
 
 

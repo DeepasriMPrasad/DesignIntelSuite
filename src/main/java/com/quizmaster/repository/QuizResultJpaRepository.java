@@ -17,4 +17,6 @@ public interface QuizResultJpaRepository extends JpaRepository<QuizResult, Long>
     
     @Query("SELECT q FROM QuizResult q WHERE q.sessionId = ?1")
     QuizResult findBySessionId(String sessionId);
+    
+    boolean existsByiNumber(String iNumber);
 }

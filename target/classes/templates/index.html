@@ -14,24 +14,29 @@
         <div class="col-md-8 col-lg-6">
             <div class="card quiz-card mt-5">
                 <div class="card-header text-center bg-primary text-white">
-                    <h1 class="display-5">Quiz Master</h1>
+                    <h1 class="display-5">CXS Quiz Master</h1>
                 </div>
                 <div class="card-body">
                     <div class="welcome-section text-center">
-                        <h2 class="mb-4">Welcome to Quiz Master!</h2>
-                        <p class="lead mb-4">Test your knowledge with our interactive quiz</p>
+                        <h2 class="mb-4">Welcome to CXS Quiz Master!</h2>
+                        <p class="lead mb-4">Test your knowledge for the CXS Architecture Summit</p>
 
                         <div class="name-form mt-5">
                             <div class="form-group mb-3">
                                 <label for="userName" class="form-label">Enter Your Name</label>
                                 <input type="text" class="form-control form-control-lg" id="userName" placeholder="Your name">
                             </div>
+                            <div class="form-group mb-3">
+                                <label for="iNumber" class="form-label">Enter Your I-Number</label>
+                                <input type="text" class="form-control form-control-lg" id="iNumber" placeholder="Your I-Number (e.g., I123456)">
+                                <small class="form-text text-muted">Each I-Number can only take the quiz once</small>
+                            </div>
                             <button id="startButton" class="btn btn-primary btn-lg w-100 mt-3">Start Quiz</button>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer text-center text-muted">
-                    <p>Quiz Master &copy; 2025</p>
+                    <p>CXS Quiz Master &copy; 2025 CXS Architecture Team</p>
                 </div>
             </div>
         </div>
@@ -49,14 +54,27 @@
         // Start button event listener
         document.getElementById('startButton').addEventListener('click', function() {
             const userName = document.getElementById('userName').value.trim();
+            const iNumber = document.getElementById('iNumber').value.trim();
+            
             if (!userName) {
                 alert('Please enter your name to start the quiz');
+                return;
+            }
+            
+            if (!iNumber) {
+                alert('Please enter your I-Number to start the quiz');
+                return;
+            }
+            
+            if (!iNumber.match(/^I\d+$/i)) {
+                alert('Please enter a valid I-Number (format: I followed by numbers)');
                 return;
             }
 
             // Create a new quiz session with context path
             axios.post(contextPath + 'api/quiz/start', {
-                userName: userName
+                userName: userName,
+                iNumber: iNumber
             })
                 .then(function(response) {
                     const sessionId = response.data.sessionId;
@@ -65,7 +83,11 @@
                 })
                 .catch(function(error) {
                     console.error('Error starting quiz:', error);
-                    alert('Failed to start quiz. Please try again.');
+                    if (error.response && error.response.data && error.response.data.message) {
+                        alert(error.response.data.message);
+                    } else {
+                        alert('Failed to start quiz. Please try again.');
+                    }
                 });
         });
     });

@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class RankingResponse {
     private String userName;
+    private String iNumber;
     private int rank;
     private int score;
     private double percentageScore;

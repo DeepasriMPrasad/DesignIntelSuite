@@ -21,6 +21,7 @@ public class QuizResult {
     
     private String sessionId;
     private String userName;
+    private String iNumber;
     private int score;
     private double percentageScore;
     private int totalQuestions;

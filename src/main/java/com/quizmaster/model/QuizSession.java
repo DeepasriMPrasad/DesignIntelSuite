@@ -16,6 +16,7 @@ import java.util.Set;
 public class QuizSession {
     private String sessionId;
     private String userName;
+    private String iNumber;
     private List<Question> questions;
     private String currentQuestionId;
     private int currentAttempts;

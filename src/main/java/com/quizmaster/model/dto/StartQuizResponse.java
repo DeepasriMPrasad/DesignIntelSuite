@@ -13,5 +13,6 @@ public class StartQuizResponse {
     private String sessionId;
     private String message;
     private String userName;
+    private String iNumber;
     private int maxQuestions;
 }

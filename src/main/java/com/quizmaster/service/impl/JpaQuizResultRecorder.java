@@ -31,6 +31,7 @@ public class JpaQuizResultRecorder implements QuizResultRecorder {
         QuizResult quizResult = QuizResult.builder()
                 .sessionId(sessionId)
                 .userName(userName)
+                .iNumber(response.getINumber())
                 .score(response.getCorrectAnswers())
                 .percentageScore(response.getPercentageScore())
                 .totalQuestions(response.getTotalQuestions())

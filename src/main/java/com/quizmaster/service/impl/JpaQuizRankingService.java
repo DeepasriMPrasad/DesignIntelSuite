@@ -101,6 +101,15 @@ public class JpaQuizRankingService implements QuizRankingService {
         quizResultRepository.deleteAll();
     }
     
+    @Override
+    public boolean hasUserWithINumberTakenQuiz(String iNumber) {
+        log.debug("Checking if user with I-Number {} has already taken the quiz", iNumber);
+        if (iNumber == null || iNumber.trim().isEmpty()) {
+            return false;
+        }
+        return quizResultRepository.existsByiNumber(iNumber.trim());
+    }
+    
     private List<QuizResult> getRankedResults() {
         List<QuizResult> results = quizResultRepository.findAll(
                 Sort.by(Sort.Direction.DESC, "percentageScore")

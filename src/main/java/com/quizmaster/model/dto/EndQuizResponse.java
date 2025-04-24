@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class EndQuizResponse {
     private String sessionId;
     private String userName;
+    private String iNumber;
     private int totalQuestions;
     private int correctAnswers;
     private double percentageScore;

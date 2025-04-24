@@ -47,4 +47,12 @@ public interface QuizRankingService {
      * @throws IOException if an error occurs while clearing results
      */
     void clearAllResults() throws IOException;
+    
+    /**
+     * Checks if a user with the given I-Number has already taken the quiz
+     * 
+     * @param iNumber the I-Number to check
+     * @return true if a user with this I-Number has already taken the quiz, false otherwise
+     */
+    boolean hasUserWithINumberTakenQuiz(String iNumber);
 }

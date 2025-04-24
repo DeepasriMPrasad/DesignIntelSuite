@@ -82,6 +82,18 @@ public class QuizRankingServiceImpl implements QuizRankingService {
     public void clearAllResults() throws IOException {
         quizResultRepository.clearAllResults();
     }
+    
+    @Override
+    public boolean hasUserWithINumberTakenQuiz(String iNumber) {
+        // For file-based implementation, we need to check all results
+        if (iNumber == null || iNumber.trim().isEmpty()) {
+            return false;
+        }
+        
+        // Check if any result has this iNumber
+        return quizResultRepository.getAllResults().stream()
+                .anyMatch(result -> iNumber.trim().equals(result.getINumber()));
+    }
 
     private List<QuizResult> getRankedResults() {
         List<QuizResult> results = quizResultRepository.getAllResults();

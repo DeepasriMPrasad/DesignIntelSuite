@@ -24,8 +24,8 @@
 /home/runner/workspace/src/main/java/com/quizmaster/service/impl/QuizRankingServiceImpl.java
 /home/runner/workspace/src/main/java/com/quizmaster/model/Question.java
 /home/runner/workspace/src/main/java/com/quizmaster/model/dto/ValidateAnswerResponse.java
-/home/runner/workspace/src/main/java/com/quizmaster/model/dto/ScoreResponse.java
 /home/runner/workspace/src/main/java/com/quizmaster/model/dto/RankingListResponse.java
+/home/runner/workspace/src/main/java/com/quizmaster/model/dto/ScoreResponse.java
 /home/runner/workspace/src/main/java/com/quizmaster/model/dto/RankingResponse.java
 /home/runner/workspace/src/main/java/com/quizmaster/model/Option.java
 /home/runner/workspace/src/main/java/com/quizmaster/QuizMasterApplication.java
