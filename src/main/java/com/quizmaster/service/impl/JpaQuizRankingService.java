@@ -109,7 +109,7 @@ public class JpaQuizRankingService implements QuizRankingService {
     
     @Override
     public boolean hasUserWithINumberTakenQuiz(String iNumber) {
-        log.debug("Checking if user with I-Number {} has already taken the quiz", iNumber);
+        log.debug("Checking if user with Identification Number {} has already taken the quiz", iNumber);
         if (iNumber == null || iNumber.trim().isEmpty()) {
             return false;
         }

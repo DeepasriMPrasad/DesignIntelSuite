@@ -17,7 +17,7 @@ public class StartQuizRequest {
     @JsonProperty("userName")
     private String userName;
     
-    @NotBlank(message = "I-Number cannot be empty")
+    @NotBlank(message = "Identification Number cannot be empty")
     @JsonProperty("iNumber")
     private String iNumber;
 }

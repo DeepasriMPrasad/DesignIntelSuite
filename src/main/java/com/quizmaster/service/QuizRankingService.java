@@ -57,10 +57,10 @@ public interface QuizRankingService {
     void deleteQuizResult(Long id) throws IOException;
     
     /**
-     * Checks if a user with the given I-Number has already taken the quiz
+     * Checks if a user with the given Identification Number has already taken the quiz
      * 
-     * @param iNumber the I-Number to check
-     * @return true if a user with this I-Number has already taken the quiz, false otherwise
+     * @param iNumber the Identification Number (I-Number, C-Number, or D-Number) to check
+     * @return true if a user with this Identification Number has already taken the quiz, false otherwise
      */
     boolean hasUserWithINumberTakenQuiz(String iNumber);
 }
