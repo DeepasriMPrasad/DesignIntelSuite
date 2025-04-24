@@ -184,6 +184,10 @@
         console.log("Full URL:", window.location.origin + questionUrl);
         console.log("Context Path:", contextPath);
         console.log("Session ID value:", sessionId);
+        console.log("Making API request with axios...");
+
+        // Set default axios configuration
+        axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
         
         // Add debug info directly to the loading screen
         document.querySelector('#loadingScreen p').textContent = 
@@ -211,8 +215,14 @@
             })
             .catch(error => {
                 console.error('ERROR: Failed to fetch question:', error);
+                console.error('Error details:', {
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    config: error.config
+                });
                 document.querySelector('#loadingScreen p').textContent = 
-                    `Error loading question. Checking session status...`;
+                    `Error loading question. Status: ${error.response?.status || 'Unknown'}`;
 
                 // Check if this is an invalid session or no more questions error
                 if (error.response && error.response.data) {
