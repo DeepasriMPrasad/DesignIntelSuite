@@ -4,6 +4,7 @@ import com.quizmaster.model.QuizResult;
 import com.quizmaster.model.dto.RankingListResponse;
 import com.quizmaster.model.dto.RankingResponse;
 import com.quizmaster.service.QuizRankingService;
+import com.quizmaster.service.ScheduledExportService;
 import com.quizmaster.util.ExcelReportGenerator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,12 +29,15 @@ public class RankingController {
 
     private final QuizRankingService quizRankingService;
     private final ExcelReportGenerator excelReportGenerator;
+    private final ScheduledExportService scheduledExportService;
 
     @Autowired
     public RankingController(@Qualifier("jpaQuizRankingService") QuizRankingService quizRankingService, 
-                            ExcelReportGenerator excelReportGenerator) {
+                            ExcelReportGenerator excelReportGenerator,
+                            ScheduledExportService scheduledExportService) {
         this.quizRankingService = quizRankingService;
         this.excelReportGenerator = excelReportGenerator;
+        this.scheduledExportService = scheduledExportService;
     }
 
     @Operation(summary = "Get leaderboard",
@@ -89,5 +93,21 @@ public class RankingController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void clearAllRankings() throws IOException {
         quizRankingService.clearAllResults();
+    }
+    
+    @Operation(summary = "Manually export quiz results to Excel",
+            description = "Triggers manual export of quiz results to Excel file")
+    @ApiResponse(responseCode = "200", description = "Export process triggered")
+    @PostMapping("/export-now")
+    public ResponseEntity<String> manualExport() {
+        int results = scheduledExportService.exportResultsNow();
+        if (results < 0) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error occurred during export process");
+        } else if (results == 0) {
+            return ResponseEntity.ok("No quiz results to export");
+        } else {
+            return ResponseEntity.ok("Successfully exported " + results + " quiz results to Excel");
+        }
     }
 }

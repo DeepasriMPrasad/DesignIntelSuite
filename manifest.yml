@@ -1,0 +1,23 @@
+---
+applications:
+- name: quizmaster
+  memory: 1G
+  instances: 1
+  path: target/quizmaster.jar
+  buildpacks:
+  - java_buildpack
+  env:
+    JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+ } }'
+    SPRING_PROFILES_ACTIVE: prod
+    JBP_CONFIG_SPRING_AUTO_RECONFIGURATION: '{enabled: false}'
+    QUESTIONS_EXCEL_PATH: 'file:./questions.xlsx'
+    QUIZMASTER_RESULTS_STORAGE_TYPE: 'database'
+  health-check-type: http
+  health-check-http-endpoint: /quizmaster/api/quiz/health
+  timeout: 180
+  routes:
+  - route: quizmaster-${random-word}.cfapps.eu10.hana.ondemand.com
+  services:
+  - quizmaster-db
+  # Uncomment the following line if you want to use XSUAA authentication
+  # - quizmaster-xsuaa

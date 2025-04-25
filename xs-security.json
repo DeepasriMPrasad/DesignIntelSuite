@@ -1,0 +1,52 @@
+{
+  "xsappname": "quizmaster",
+  "tenant-mode": "dedicated",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.Admin",
+      "description": "Admin access to the Quiz Master application"
+    },
+    {
+      "name": "$XSAPPNAME.User",
+      "description": "Regular user access to take quizzes"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "QuizAdmin",
+      "description": "Quiz Administrator",
+      "scope-references": [
+        "$XSAPPNAME.Admin"
+      ]
+    },
+    {
+      "name": "QuizUser",
+      "description": "Quiz User",
+      "scope-references": [
+        "$XSAPPNAME.User"
+      ]
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "QuizMaster_Admin",
+      "description": "Quiz Master Administrators",
+      "role-template-references": [
+        "$XSAPPNAME.QuizAdmin"
+      ]
+    },
+    {
+      "name": "QuizMaster_User",
+      "description": "Quiz Master Users",
+      "role-template-references": [
+        "$XSAPPNAME.QuizUser"
+      ]
+    }
+  ],
+  "oauth2-configuration": {
+    "token-validity": 3600,
+    "redirect-uris": [
+      "https://quizmaster-*.cfapps.*.hana.ondemand.com/quizmaster/**"
+    ]
+  }
+}
