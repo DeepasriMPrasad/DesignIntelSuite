@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service implementation for exporting quiz results to Excel
@@ -244,6 +245,7 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
     
     /**
      * Creates a backup of the Excel file before making changes
+     * Maintains only the 3 most recent backups
      * 
      * @return true if backup succeeded, false otherwise
      */
@@ -260,7 +262,8 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
             // Create backup file name with timestamp
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
             String timestamp = LocalDateTime.now().format(formatter);
-            String backupFileName = filePath.replace(".xlsx", "_backup_" + timestamp + ".xlsx");
+            String backupFileBaseName = filePath.replace(".xlsx", "_backup_");
+            String backupFileName = backupFileBaseName + timestamp + ".xlsx";
             
             Path sourcePath = sourceFile.toPath();
             Path backupPath = Paths.get(backupFileName);
@@ -268,6 +271,64 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
             // Copy the file with replace if exists option
             Files.copy(sourcePath, backupPath, StandardCopyOption.REPLACE_EXISTING);
             log.info("Successfully created backup of Excel file at: {}", backupFileName);
+            
+            // Cleanup old backups - keep only the 3 most recent
+            try {
+                Path directoryPath = Paths.get(filePath).getParent();
+                if (directoryPath == null) {
+                    directoryPath = Paths.get(".");
+                }
+                
+                // Extract the base filename for matching
+                final String baseFileName = new File(backupFileBaseName).getName();
+                
+                // Get all backup files matching the pattern
+                List<Path> backupFiles = Files.list(directoryPath)
+                    .filter(path -> {
+                        String fileName = path.getFileName().toString();
+                        return fileName.startsWith(baseFileName) && fileName.endsWith(".xlsx");
+                    })
+                    .sorted((p1, p2) -> {
+                        try {
+                            // Sort by last modified time (newest first)
+                            return Long.compare(
+                                Files.getLastModifiedTime(p2).toMillis(),
+                                Files.getLastModifiedTime(p1).toMillis()
+                            );
+                        } catch (IOException e) {
+                            return 0;
+                        }
+                    })
+                    .collect(Collectors.toList());
+                
+                // Keep only the 3 most recent backups
+                log.info("Found {} backup files", backupFiles.size());
+                
+                // Log all found backup files for debugging
+                for (int i = 0; i < backupFiles.size(); i++) {
+                    log.info("Backup file #{}: {}", i+1, backupFiles.get(i).getFileName());
+                }
+                
+                if (backupFiles.size() > 3) {
+                    log.info("Keeping only the 3 most recent backup files");
+                    List<Path> filesToDelete = backupFiles.subList(3, backupFiles.size());
+                    
+                    for (Path path : filesToDelete) {
+                        try {
+                            log.info("Deleting old backup file: {}", path.getFileName());
+                            Files.delete(path);
+                        } catch (IOException e) {
+                            log.warn("Could not delete old backup file: {}", path, e);
+                        }
+                    }
+                } else {
+                    log.info("No need to delete backups, only {} files exist (maximum is 3)", backupFiles.size());
+                }
+            } catch (IOException e) {
+                log.warn("Error while cleaning up old backup files", e);
+                // Don't fail the backup creation if cleanup fails
+            }
+            
             return true;
         } catch (IOException e) {
             log.error("Failed to create backup of Excel file", e);
