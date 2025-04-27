@@ -37,14 +37,50 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
     @Value("${results.excel-path:file:./results.xlsx}")
     private String resultsExcelPath;
     
+    // Track the last time a backup was created by the scheduled task
+    private static LocalDateTime lastScheduledBackupTime = LocalDateTime.now().minusHours(1);
+    
+    // Flag to identify if the export is triggered by a scheduled task or by startup/shutdown hooks
+    public enum ExportTrigger { SCHEDULED, STARTUP, SHUTDOWN, MANUAL }
+    
     @Override
     public void exportResults(List<QuizResult> results) {
+        exportResults(results, ExportTrigger.SCHEDULED);
+    }
+    
+    /**
+     * Export results with a specific trigger type
+     * @param results The results to export
+     * @param trigger The type of trigger that caused the export
+     */
+    public void exportResults(List<QuizResult> results, ExportTrigger trigger) {
         try {
             String filePath = getFilePath();
-            log.info("Exporting {} quiz results to Excel file: {}", results.size(), filePath);
+            log.info("Exporting {} quiz results to Excel file: {} (trigger: {})", 
+                    results.size(), filePath, trigger);
             
-            // Create backup of the existing file before modifications
-            createBackup();
+            boolean createBackup = false;
+            
+            // Always create backups on startup and shutdown
+            if (trigger == ExportTrigger.STARTUP || trigger == ExportTrigger.SHUTDOWN || trigger == ExportTrigger.MANUAL) {
+                log.info("Creating backup for {} operation", trigger);
+                createBackup = true;
+            } 
+            // For scheduled exports, only create backups once per hour
+            else if (trigger == ExportTrigger.SCHEDULED && shouldCreateHourlyBackup()) {
+                createBackup = true;
+                lastScheduledBackupTime = LocalDateTime.now();
+                log.info("Creating scheduled hourly backup at {}, next scheduled after {}", 
+                        lastScheduledBackupTime, lastScheduledBackupTime.plusHours(1));
+            } else {
+                log.debug("Skipping backup creation for scheduled task, last backup at {}, next at {}", 
+                        lastScheduledBackupTime, lastScheduledBackupTime.plusHours(1));
+            }
+            
+            // Create backup if needed
+            if (createBackup) {
+                createBackup();
+            }
             
             Workbook workbook;
             File file = new File(filePath);
@@ -348,6 +384,29 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
         return path;
     }
     
+    /**
+     * Determines if an hourly backup should be created based on the elapsed time
+     * since the last scheduled backup. Creates backups only once per hour.
+     * 
+     * @return true if a backup should be created, false otherwise
+     */
+    private boolean shouldCreateHourlyBackup() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime nextBackupTime = lastScheduledBackupTime.plusHours(1);
+        boolean shouldBackup = now.isAfter(nextBackupTime);
+        
+        if (shouldBackup) {
+            log.info("Creating hourly backup: last scheduled backup was at {}, it's now {}", 
+                    lastScheduledBackupTime, now);
+        } else {
+            long minutesUntilNextBackup = java.time.Duration.between(now, nextBackupTime).toMinutes();
+            log.debug("Skipping backup creation: {} minutes until next scheduled backup", 
+                    minutesUntilNextBackup);
+        }
+        
+        return shouldBackup;
+    }
+    
     private CellStyle createHeaderStyle(Workbook workbook) {
         CellStyle headerStyle = workbook.createCellStyle();
         Font font = workbook.createFont();
@@ -360,5 +419,63 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
         headerStyle.setBorderLeft(BorderStyle.THIN);
         headerStyle.setBorderRight(BorderStyle.THIN);
         return headerStyle;
+    }
+    
+    /**
+     * Exports quiz results to a special file (used for db_results.xlsx)
+     * This is a variation of the exportResults method but creates a new file
+     * instead of overwriting the results.xlsx file
+     * 
+     * @param results The quiz results to export
+     * @param filename The filename to export to (e.g., "db_results.xlsx")
+     * @throws IOException If there's an error creating the file
+     */
+    public void exportToSpecialFile(List<QuizResult> results, String filename) throws IOException {
+        log.info("Exporting {} quiz results to special file: {}", results.size(), filename);
+        
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet(SHEET_NAME);
+        
+        // Create header row
+        Row headerRow = sheet.createRow(0);
+        CellStyle headerStyle = createHeaderStyle(workbook);
+        
+        for (int i = 0; i < HEADERS.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(HEADERS[i]);
+            cell.setCellStyle(headerStyle);
+        }
+        
+        // Add data rows
+        int rowNum = 1; // Start from second row (after header)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        
+        for (QuizResult result : results) {
+            Row row = sheet.createRow(rowNum++);
+            
+            row.createCell(0).setCellValue(result.getId() != null ? result.getId() : rowNum - 1);
+            row.createCell(1).setCellValue(result.getUserName());
+            row.createCell(2).setCellValue(result.getINumber());
+            row.createCell(3).setCellValue(result.getPercentageScore());
+            row.createCell(4).setCellValue(result.getTotalQuestions());
+            row.createCell(5).setCellValue(result.getCorrectAnswers());
+            row.createCell(6).setCellValue(result.getTimeTakenSeconds());
+            row.createCell(7).setCellValue(result.getCompletedAt() != null ? 
+                    result.getCompletedAt().format(formatter) : 
+                    LocalDateTime.now().format(formatter));
+        }
+        
+        // Auto-size columns
+        for (int i = 0; i < HEADERS.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+        
+        // Write directly to the specified filename
+        try (FileOutputStream fileOut = new FileOutputStream(filename)) {
+            workbook.write(fileOut);
+        }
+        
+        workbook.close();
+        log.info("Successfully exported {} quiz results to special file: {}", results.size(), filename);
     }
 }

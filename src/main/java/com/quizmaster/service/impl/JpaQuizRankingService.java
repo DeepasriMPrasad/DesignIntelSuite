@@ -5,6 +5,7 @@ import com.quizmaster.model.dto.RankingResponse;
 import com.quizmaster.repository.QuizResultJpaRepository;
 import com.quizmaster.service.QuizRankingService;
 import com.quizmaster.service.QuizResultExporter;
+import com.quizmaster.service.impl.ExcelQuizResultExporterImpl.ExportTrigger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -67,6 +68,9 @@ public class JpaQuizRankingService implements QuizRankingService {
             try {
                 log.info("Synchronizing quiz results with Excel on startup (background thread)");
                 
+                // First, export existing DB data to db_results.xlsx before we potentially overwrite it
+                exportExistingDbToSpecialFile();
+                
                 // Load results from Excel file
                 List<QuizResult> excelResults = quizResultExporter.importResults();
                 log.info("Found {} quiz results in Excel file for import", excelResults.size());
@@ -77,7 +81,7 @@ public class JpaQuizRankingService implements QuizRankingService {
                     List<QuizResult> dbResults = quizResultRepository.findAll();
                     if (!dbResults.isEmpty()) {
                         log.info("Exporting {} existing database records to Excel", dbResults.size());
-                        quizResultExporter.exportResults(dbResults);
+                        quizResultExporter.exportResults(dbResults, ExportTrigger.STARTUP);
                     }
                     return;
                 }
@@ -110,9 +114,18 @@ public class JpaQuizRankingService implements QuizRankingService {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
                     log.info("Application shutting down, exporting quiz results to Excel");
-                    List<QuizResult> finalResults = quizResultRepository.findAll();
-                    quizResultExporter.exportResults(finalResults);
-                    log.info("Successfully exported {} quiz results to Excel on shutdown", finalResults.size());
+                    try {
+                        List<QuizResult> finalResults = quizResultRepository.findAll();
+                        quizResultExporter.exportResults(finalResults, ExportTrigger.SHUTDOWN);
+                        log.info("Successfully exported {} quiz results to Excel on shutdown", finalResults.size());
+                    } catch (Exception dbException) {
+                        // Database might already be closed during shutdown
+                        if (dbException.toString().contains("Database is already closed")) {
+                            log.warn("Database already closed during shutdown hook execution, skipping export");
+                        } else {
+                            throw dbException;
+                        }
+                    }
                 } catch (Exception e) {
                     log.error("Error exporting quiz results to Excel on shutdown", e);
                 }
@@ -216,5 +229,43 @@ public class JpaQuizRankingService implements QuizRankingService {
         results.forEach(result -> result.setRank(rank.getAndIncrement()));
         
         return results;
+    }
+    
+    /**
+     * Exports the existing database content to a special db_results.xlsx file
+     * before loading data from results.xlsx
+     * This ensures we don't lose any database data during the synchronization process
+     */
+    private void exportExistingDbToSpecialFile() {
+        try {
+            List<QuizResult> existingDbResults = quizResultRepository.findAll();
+            if (existingDbResults == null || existingDbResults.isEmpty()) {
+                log.info("No existing database results to export to db_results.xlsx before sync");
+                return;
+            }
+            
+            log.info("Exporting {} existing database results to db_results.xlsx before Excel sync", existingDbResults.size());
+            
+            // Export to special db results file using the QuizResultRecorder 
+            if (quizResultExporter instanceof ExcelQuizResultExporterImpl) {
+                // If it's the expected exporter type
+                try {
+                    // Call specialized method for exporting to db_results.xlsx
+                    ((ExcelQuizResultExporterImpl) quizResultExporter)
+                        .exportToSpecialFile(existingDbResults, "db_results.xlsx");
+                    log.info("Successfully exported {} existing database records to db_results.xlsx before sync",
+                           existingDbResults.size());
+                } catch (Exception e) {
+                    log.error("Error exporting existing database to db_results.xlsx: {}", e.getMessage(), e);
+                }
+            } else {
+                // Otherwise fall back to standard export
+                log.info("Special export not available, using standard export");
+                quizResultExporter.exportResults(existingDbResults, ExportTrigger.STARTUP);
+            }
+        } catch (Exception e) {
+            log.error("Failed to export existing database to db_results.xlsx: {}", e.getMessage(), e);
+            log.warn("Continuing with Excel sync despite db_results.xlsx export failure");
+        }
     }
 }

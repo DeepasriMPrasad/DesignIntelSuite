@@ -1,6 +1,8 @@
 package com.quizmaster.service;
 
 import com.quizmaster.model.QuizResult;
+import com.quizmaster.service.impl.ExcelQuizResultExporterImpl;
+import com.quizmaster.service.impl.ExcelQuizResultExporterImpl.ExportTrigger;
 import com.quizmaster.util.LoggingUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +59,9 @@ public class ScheduledExportService {
             }
             
             LoggingUtils.logDatabaseOperation(log, "SELECT", "QuizResults", "Retrieved " + results.size() + " results for export");
-            quizResultExporter.exportResults(results);
+            
+            // Always use the trigger-based export for manual exports
+            quizResultExporter.exportResults(results, ExportTrigger.MANUAL);
             LoggingUtils.logEvent(log, "ExportSuccess", "Successfully exported " + results.size() + " quiz results to Excel");
             return results.size();
         } catch (Exception e) {

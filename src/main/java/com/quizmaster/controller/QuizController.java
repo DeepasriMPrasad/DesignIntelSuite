@@ -98,10 +98,35 @@ public class QuizController {
     @PostMapping("/admin/clear-leaderboard")
     public ResponseEntity<String> clearLeaderboard() {
         try {
+            // Export to db_results.xlsx before clearing the DB
+            exportToDbResultsFile();
+            
             quizRankingService.clearAllResults();
-            return ResponseEntity.ok("Leaderboard data cleared successfully");
+            return ResponseEntity.ok("Leaderboard data exported to db_results.xlsx and cleared successfully");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error clearing leaderboard data: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Helper method to export the current DB data to a special db_results.xlsx file
+     * before deletion
+     */
+    private void exportToDbResultsFile() {
+        try {
+            // Get all results from the database
+            var results = quizRankingService.getAllResults();
+            
+            // Export them to db_results.xlsx file
+            // We'll create a simple wrapper around the existing export functionality
+            if (quizResultRecorder instanceof com.quizmaster.service.impl.JpaQuizResultRecorder) {
+                ((com.quizmaster.service.impl.JpaQuizResultRecorder) quizResultRecorder)
+                    .exportResultsToSpecialFile(results, "db_results.xlsx");
+            }
+        } catch (Exception e) {
+            // Log the error but don't block the request
+            org.slf4j.LoggerFactory.getLogger(QuizController.class)
+                .error("Failed to export DB results to db_results.xlsx before clearing: {}", e.getMessage(), e);
         }
     }
     
@@ -115,6 +140,19 @@ public class QuizController {
             return ResponseEntity.ok("Quiz result deleted successfully");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error deleting quiz result: " + e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "Export database results to db_results.xlsx (Admin only)",
+            description = "Exports all quiz results to db_results.xlsx file without deleting them")
+    @ApiResponse(responseCode = "200", description = "Quiz results exported successfully")
+    @PostMapping("/admin/export-to-db-results")
+    public ResponseEntity<String> exportToDbResults() {
+        try {
+            exportToDbResultsFile();
+            return ResponseEntity.ok("Database results successfully exported to db_results.xlsx");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error exporting database results: " + e.getMessage());
         }
     }
 
