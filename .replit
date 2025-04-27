@@ -2,7 +2,7 @@ modules = ["python-3.11", "java", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["maven"]
+packages = ["maven", "jdk"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -79,7 +79,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn spring-boot:run -Dspring-boot.run.jvmArguments=\"-Xms256m -Xmx512m\" -DskipTests"
+args = "mvn spring-boot:run -DskipTests"
 waitForPort = 5000
 
 [[workflows.workflow]]
