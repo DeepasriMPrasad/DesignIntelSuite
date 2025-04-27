@@ -59,6 +59,22 @@ public class JpaQuizResultRecorder implements QuizResultRecorder {
     }
     
     /**
+     * Export results to Excel file using the QuizResultExporter
+     * 
+     * @param results The list of quiz results to export
+     * @throws IOException If there is an error during export
+     */
+    public void exportResults(List<QuizResult> results) throws IOException {
+        if (results == null || results.isEmpty()) {
+            log.info("No results to export to Excel");
+            return;
+        }
+        
+        log.info("Exporting {} quiz results to Excel", results.size());
+        quizResultExporter.exportResults(results, ExportTrigger.MANUAL);
+    }
+    
+    /**
      * Exports quiz results to a special file (e.g., db_results.xlsx)
      * This is used before clearing the database to ensure no data is lost
      * 

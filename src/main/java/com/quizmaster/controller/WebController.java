@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Controller for web views
  */
 @Controller
+@Slf4j
 public class WebController {
 
     private final QuizService quizService;
@@ -66,5 +68,57 @@ public class WebController {
         }
 
         return "leaderboard";
+    }
+    
+    /**
+     * Admin Database Management page
+     * Requires admin password parameter for access
+     * Supports pagination for result entries
+     */
+    @GetMapping("/admin")
+    public String adminDashboard(
+            @RequestParam(required = true) String password,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+        
+        log.info("Accessing admin dashboard with page: {} and size: {}", page, size);
+        
+        // Check password (hardcoded for simplicity - same as in the UI)
+        if (!"Donotdelete1#".equals(password)) {
+            log.warn("Invalid admin password attempt");
+            return "redirect:/leaderboard";
+        }
+        
+        // Get all results for management
+        List<QuizResult> allResults = quizRankingService.getAllResults();
+        
+        // Calculate total pages
+        int totalItems = allResults.size();
+        int totalPages = (int) Math.ceil((double) totalItems / size);
+        
+        // Validate page range
+        if (page < 0) {
+            page = 0;
+        } else if (page >= totalPages && totalPages > 0) {
+            page = totalPages - 1;
+        }
+        
+        // Calculate start and end indices for the current page
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, totalItems);
+        
+        // Get the sublist for the current page
+        List<QuizResult> paginatedResults = 
+            allResults.isEmpty() ? allResults : allResults.subList(startIndex, endIndex);
+        
+        // Add pagination information to the model
+        model.addAttribute("allResults", paginatedResults);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+        model.addAttribute("totalItems", totalItems);
+        model.addAttribute("pageSize", size);
+        
+        return "admin";
     }
 }

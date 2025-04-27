@@ -35,6 +35,9 @@
                             <button id="adminLoginBtn" class="btn btn-sm btn-secondary me-2">
                                 <i class="fas fa-lock me-1"></i> Admin Login
                             </button>
+                            <a th:href="@{/admin?password=Donotdelete1%23}" class="btn btn-sm btn-success admin-controls me-2">
+                                <i class="fas fa-database me-1"></i> Manage DB
+                            </a>
                             <a th:href="@{/admin/questions?password=Donotdelete1%23}" class="btn btn-sm btn-primary admin-controls me-2">
                                 <i class="fas fa-edit me-1"></i> Edit Questions
                             </a>
@@ -98,7 +101,12 @@
                     </div>
                     <div class="card-footer text-muted d-flex justify-content-between align-items-center">
                         <p class="mb-0">Total participants: <span th:text="${totalParticipants}">0</span></p>
-                        <p class="mb-0">CXS Architecture Series 2025</p>
+                        <div>
+                            <p class="mb-0 d-inline-block me-3">CXS Architecture Series 2025</p>
+                            <a id="adminPageLink" href="#" style="display: none;" class="btn btn-sm btn-primary">
+                                <i class="fas fa-cog me-1"></i> Manage Database
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -198,6 +206,13 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Check if user is in admin mode
         checkAdminMode();
+        
+        // Setup admin page link
+        const adminPageLink = document.getElementById('adminPageLink');
+        if (sessionStorage.getItem('adminMode') === 'true') {
+            adminPageLink.style.display = 'inline-block';
+            adminPageLink.href = contextPath + 'admin?password=Donotdelete1#';
+        }
         
         // Admin login button
         const adminLoginBtn = document.getElementById('adminLoginBtn');

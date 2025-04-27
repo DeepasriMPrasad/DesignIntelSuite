@@ -6,7 +6,7 @@ packages = ["maven"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "./start_foreground.sh"]
+run = ["sh", "-c", "java -jar target/quizmaster.jar"]
 build = ["sh", "-c", "mvn clean install package -DskipTests"]
 
 [workflows]
@@ -33,6 +33,10 @@ args = "Spring Boot App"
 task = "workflow.run"
 args = "Spring Boot Direct"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Web Access"
+
 [[workflows.workflow]]
 name = "Streamlit Interface"
 author = "agent"
@@ -57,7 +61,7 @@ agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./start_foreground.sh"
+args = "java -jar target/quizmaster.jar"
 waitForPort = 5000
 
 [[workflows.workflow]]
@@ -75,7 +79,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "bash run_spring.sh"
+args = "mvn spring-boot:run -Dspring-boot.run.jvmArguments=\"-Xms256m -Xmx512m\" -DskipTests"
 waitForPort = 5000
 
 [[workflows.workflow]]
@@ -85,6 +89,15 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "mvn spring-boot:run -DskipTests"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Web Access"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "echo \"Configuring web access to port 5000\""
 waitForPort = 5000
 
 [[ports]]

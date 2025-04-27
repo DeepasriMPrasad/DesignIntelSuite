@@ -1,1 +1,3 @@
+com/quizmaster/model/dto/AddEntryRequest.class
+com/quizmaster/model/dto/AddEntryRequest$AddEntryRequestBuilder.class
 com/quizmaster/service/impl/ExcelQuizResultExporterImpl$ExportTrigger.class

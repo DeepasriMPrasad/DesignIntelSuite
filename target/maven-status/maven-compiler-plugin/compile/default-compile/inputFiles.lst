@@ -44,4 +44,5 @@
 /home/runner/workspace/src/main/java/com/quizmaster/config/LogDirectoryInitializer.java
 /home/runner/workspace/src/main/java/com/quizmaster/controller/QuestionEditorController.java
 /home/runner/workspace/src/main/java/com/quizmaster/service/impl/ExcelQuizResultExporterImpl.java
+/home/runner/workspace/src/main/java/com/quizmaster/model/dto/AddEntryRequest.java
 /home/runner/workspace/src/main/java/com/quizmaster/controller/WebController.java

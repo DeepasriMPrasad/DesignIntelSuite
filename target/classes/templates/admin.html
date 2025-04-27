@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CXS Quiz Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/static/css/style.css}"/>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row mb-4">
+            <div class="col text-center">
+                <h1 class="display-4">CXS Quiz Admin Dashboard</h1>
+                <p class="lead">Manage Quiz Results Database</p>
+            </div>
+        </div>
+        
+        <!-- Database Management Card -->
+        <div class="row mb-3">
+            <div class="col">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-database me-2"></i>Database Management</h5>
+                        <div>
+                            <button id="exportDbBtn" class="btn btn-sm btn-warning me-2" onclick="exportToDbFile()">
+                                <i class="fas fa-file-export me-1"></i> Export DB to File
+                            </button>
+                            <button id="clearLeaderboardBtn" class="btn btn-sm btn-danger" 
+                                    onclick="if(confirm('Are you sure you want to clear all leaderboard data? This cannot be undone.')) { clearLeaderboard(); }">
+                                <i class="fas fa-trash-alt me-1"></i> Clear All Entries
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Add New Entry Form -->
+                        <div class="mb-4 p-3 border rounded">
+                            <h5><i class="fas fa-user-plus me-2"></i>Add New Entry</h5>
+                            <form id="addEntryForm" onsubmit="return false;">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label for="userName" class="form-label">User Name</label>
+                                        <input type="text" class="form-control" id="userName" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="iNumber" class="form-label">I-Number</label>
+                                        <input type="text" class="form-control" id="iNumber" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="score" class="form-label">Score (Correct/Total)</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="correctAnswers" min="0" max="5" required>
+                                            <span class="input-group-text">/</span>
+                                            <input type="number" class="form-control" id="totalQuestions" value="5" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="timeTaken" class="form-label">Time Taken (seconds)</label>
+                                        <input type="number" class="form-control" id="timeTaken" min="1" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="completedAt" class="form-label">Completion Date</label>
+                                        <input type="datetime-local" class="form-control" id="completedAt" required>
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button type="button" class="btn btn-success w-100" onclick="addEntry()">
+                                            <i class="fas fa-plus-circle me-1"></i> Add Entry
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Results Table -->
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">I-Number</th>
+                                        <th scope="col">Score</th>
+                                        <th scope="col">Percentage</th>
+                                        <th scope="col">Time (sec)</th>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="result, status : ${allResults}" th:class="${result.percentageScore == 100 ? 'table-success' : ''}">
+                                        <td th:text="${result.id}">1</td>
+                                        <td th:text="${result.userName}">John Doe</td>
+                                        <td th:text="${result.iNumber}">I123456</td>
+                                        <td th:text="${result.correctAnswers} + '/' + ${result.totalQuestions}">5/5</td>
+                                        <td>
+                                            <span th:text="${#numbers.formatDecimal(result.percentageScore, 1, 1)} + '%'">100.0%</span>
+                                            <i th:if="${result.percentageScore == 100}" class="fas fa-star text-warning ms-1"></i>
+                                        </td>
+                                        <td th:text="${result.timeTakenSeconds}">25</td>
+                                        <td th:text="${#temporals.format(result.completedAt, 'yyyy-MM-dd HH:mm')}">2025-04-24</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-danger" 
+                                                    th:onclick="'if(confirm(\'Are you sure you want to delete this entry?\')) { deleteQuizResult(' + ${result.id} + '); }'">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${#lists.isEmpty(allResults)}">
+                                        <td colspan="8" class="text-center">No quiz results available in the database.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination Controls -->
+                        <div class="mt-4" th:if="${totalPages > 1}">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    <!-- Previous Button -->
+                                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                                        <a class="page-link" th:href="@{/admin(password='Donotdelete1#',page=${currentPage - 1})}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    
+                                    <!-- Page Numbers -->
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" 
+                                        th:classappend="${currentPage == i} ? 'active' : ''">
+                                        <a class="page-link" th:href="@{/admin(password='Donotdelete1#',page=${i})}" th:text="${i + 1}">1</a>
+                                    </li>
+                                    
+                                    <!-- Next Button -->
+                                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled' : ''">
+                                        <a class="page-link" th:href="@{/admin(password='Donotdelete1#',page=${currentPage + 1})}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                            <p class="text-center text-muted mt-2">
+                                Showing <span th:text="${currentPage * pageSize + 1}">1</span> to 
+                                <span th:text="${(currentPage * pageSize) + allResults.size()}">10</span> 
+                                of <span th:text="${totalItems}">100</span> entries
+                            </p>
+                        </div>
+                    </div>
+                    <div class="card-footer text-muted d-flex justify-content-between align-items-center">
+                        <p class="mb-0">Total entries: <span th:text="${totalItems}">0</span></p>
+                        <a th:href="@{/api/rankings/admin/download/excel}" class="btn btn-success">
+                            <i class="fas fa-file-excel me-1"></i> Download as Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation Buttons -->
+        <div class="row">
+            <div class="col d-flex justify-content-between">
+                <a th:href="@{/}" class="btn btn-outline-primary">Back to Home</a>
+                <a th:href="@{/leaderboard}" class="btn btn-outline-secondary">View Leaderboard</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast container for notifications -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="fas fa-info-circle me-2 text-primary"></i>
+                <strong class="me-auto">CXS Quiz System</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                Notification message
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script th:src="@{/static/js/scripts.js}"></script>
+    <script th:inline="javascript">
+    let contextPath = /*[[@{/}]]*/ '';
+    // Ensure context path has proper trailing slash
+    if (!contextPath.endsWith('/')) {
+        contextPath += '/';
+    }
+    console.log("Using context path for API calls:", contextPath);
+    
+    // Function to clear leaderboard
+    function clearLeaderboard() {
+        const clearUrl = contextPath + 'api/quiz/admin/clear-leaderboard';
+        console.log("Clearing leaderboard with URL:", clearUrl);
+        axios.post(clearUrl)
+            .then(function(response) {
+                showToast('Leaderboard data cleared successfully', 'success');
+                // After clearing the leaderboard, always go to the first page (page 0)
+                setTimeout(() => {
+                    window.location.href = contextPath + 'admin?password=Donotdelete1%23&page=0';
+                }, 1500);
+            })
+            .catch(function(error) {
+                console.error('Error clearing leaderboard:', error);
+                showToast('Failed to clear leaderboard data. Please try again.', 'error');
+            });
+    }
+    
+    // Function to delete individual quiz result
+    function deleteQuizResult(id) {
+        // Get current page from URL parameter or default to 0
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentPage = urlParams.get('page') || 0;
+        
+        const deleteUrl = contextPath + 'api/quiz/admin/delete-result?id=' + id;
+        console.log("Deleting quiz result with URL:", deleteUrl);
+        axios.post(deleteUrl)
+            .then(function(response) {
+                showToast('Quiz result deleted successfully', 'success');
+                // Reload the page with the same page parameter after a short delay
+                setTimeout(() => {
+                    // Preserve the current page parameter in the URL
+                    window.location.href = contextPath + 'admin?password=Donotdelete1%23&page=' + currentPage;
+                }, 1500);
+            })
+            .catch(function(error) {
+                console.error('Error deleting quiz result:', error);
+                showToast('Failed to delete quiz result. Please try again.', 'error');
+            });
+    }
+    
+    // Function to export DB to file
+    function exportToDbFile() {
+        const exportUrl = contextPath + 'api/quiz/admin/export-to-db-file';
+        console.log("Exporting DB to file with URL:", exportUrl);
+        axios.get(exportUrl)
+            .then(function(response) {
+                showToast('Database exported to file successfully', 'success');
+            })
+            .catch(function(error) {
+                console.error('Error exporting database to file:', error);
+                showToast('Failed to export database to file. Please try again.', 'error');
+            });
+    }
+    
+    // Function to add a new entry
+    function addEntry() {
+        // Validate form
+        const form = document.getElementById('addEntryForm');
+        if (!validateForm()) {
+            showToast('Please fill all required fields with valid values', 'error');
+            return;
+        }
+        
+        // Get form values
+        const userName = document.getElementById('userName').value;
+        const iNumber = document.getElementById('iNumber').value;
+        const correctAnswers = parseInt(document.getElementById('correctAnswers').value);
+        const totalQuestions = parseInt(document.getElementById('totalQuestions').value);
+        const timeTaken = parseInt(document.getElementById('timeTaken').value);
+        const completedAt = document.getElementById('completedAt').value;
+        
+        // Calculate percentage score
+        const percentageScore = (correctAnswers / totalQuestions) * 100;
+        
+        // Prepare data payload
+        const payload = {
+            userName: userName,
+            iNumber: iNumber,
+            correctAnswers: correctAnswers,
+            totalQuestions: totalQuestions,
+            percentageScore: percentageScore,
+            timeTakenSeconds: timeTaken,
+            completedAt: completedAt
+        };
+        
+        // Send request to add entry
+        const addUrl = contextPath + 'api/quiz/admin/add-entry';
+        console.log("Adding new entry with URL:", addUrl);
+        console.log("Payload:", payload);
+        
+        axios.post(addUrl, payload)
+            .then(function(response) {
+                showToast('New entry added successfully', 'success');
+                // Clear form
+                clearForm();
+                // Get current page from URL parameter or default to 0
+                const urlParams = new URLSearchParams(window.location.search);
+                const currentPage = urlParams.get('page') || 0;
+                // Reload the page after a short delay
+                setTimeout(() => {
+                    window.location.href = contextPath + 'admin?password=Donotdelete1%23&page=' + currentPage;
+                }, 1500);
+            })
+            .catch(function(error) {
+                console.error('Error adding new entry:', error);
+                if (error.response && error.response.data && error.response.data.message) {
+                    showToast(error.response.data.message, 'error');
+                } else {
+                    showToast('Failed to add new entry. Please try again.', 'error');
+                }
+            });
+    }
+    
+    // Function to validate form
+    function validateForm() {
+        const userName = document.getElementById('userName').value;
+        const iNumber = document.getElementById('iNumber').value;
+        const correctAnswers = document.getElementById('correctAnswers').value;
+        const timeTaken = document.getElementById('timeTaken').value;
+        const completedAt = document.getElementById('completedAt').value;
+        
+        // Check if all fields have values
+        if (!userName || !iNumber || !correctAnswers || !timeTaken || !completedAt) {
+            return false;
+        }
+        
+        // Validate correct answers
+        const correctAnsInt = parseInt(correctAnswers);
+        if (isNaN(correctAnsInt) || correctAnsInt < 0 || correctAnsInt > 5) {
+            return false;
+        }
+        
+        // Validate time taken
+        const timeTakenInt = parseInt(timeTaken);
+        if (isNaN(timeTakenInt) || timeTakenInt <= 0) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Function to clear form
+    function clearForm() {
+        document.getElementById('userName').value = '';
+        document.getElementById('iNumber').value = '';
+        document.getElementById('correctAnswers').value = '';
+        document.getElementById('timeTaken').value = '';
+        document.getElementById('completedAt').value = '';
+    }
+    
+    // Initialize form with current date and time
+    document.addEventListener('DOMContentLoaded', function() {
+        const now = new Date();
+        const localDatetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+            .toISOString()
+            .substring(0, 16);
+        document.getElementById('completedAt').value = localDatetime;
+    });
+    </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.quizmaster.controller;
 
+import com.quizmaster.model.QuizResult;
 import com.quizmaster.model.dto.*;
 import com.quizmaster.service.QuizRankingService;
 import com.quizmaster.service.QuizResultRecorder;
@@ -10,14 +11,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/quiz")
 @Tag(name = "Quiz API", description = "Operations for managing quiz sessions")
+@Slf4j
 public class QuizController {
 
     private final QuizService quizService;
@@ -153,6 +158,57 @@ public class QuizController {
             return ResponseEntity.ok("Database results successfully exported to db_results.xlsx");
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error exporting database results: " + e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "Export database to file (Admin only)",
+            description = "Exports all quiz results to db_results.xlsx file - alias endpoint")
+    @ApiResponse(responseCode = "200", description = "Quiz results exported successfully")
+    @GetMapping("/admin/export-to-db-file")
+    public ResponseEntity<String> exportToDbFile() {
+        return exportToDbResults();
+    }
+    
+    @Operation(summary = "Add new quiz result entry (Admin only)",
+            description = "Adds a new quiz result entry to the database")
+    @ApiResponse(responseCode = "200", description = "Entry added successfully")
+    @ApiResponse(responseCode = "400", description = "Invalid entry data")
+    @PostMapping("/admin/add-entry")
+    public ResponseEntity<String> addEntry(@Valid @RequestBody AddEntryRequest request) {
+        try {
+            log.info("Adding new quiz result entry for user: {}", request.getUserName());
+            
+            // Create a new QuizResult entity
+            QuizResult quizResult = QuizResult.builder()
+                    .userName(request.getUserName())
+                    .iNumber(request.getINumber())
+                    .score(request.getCorrectAnswers())
+                    .correctAnswers(request.getCorrectAnswers())
+                    .totalQuestions(request.getTotalQuestions())
+                    .percentageScore(request.getPercentageScore())
+                    .timeTakenSeconds(request.getTimeTakenSeconds())
+                    .completedAt(request.getCompletedAt())
+                    .build();
+            
+            // Save to database
+            quizRankingService.saveQuizResult(quizResult);
+            
+            // Export to Excel to ensure consistency
+            try {
+                List<QuizResult> allResults = quizRankingService.getAllResults();
+                if (quizResultRecorder instanceof com.quizmaster.service.impl.JpaQuizResultRecorder) {
+                    ((com.quizmaster.service.impl.JpaQuizResultRecorder) quizResultRecorder)
+                        .exportResults(allResults);
+                }
+            } catch (Exception e) {
+                log.error("Failed to export results after adding new entry: {}", e.getMessage(), e);
+                // Continue anyway since the DB save was successful
+            }
+            
+            return ResponseEntity.ok("Entry added successfully");
+        } catch (Exception e) {
+            log.error("Error adding new entry: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body("Error adding new entry: " + e.getMessage());
         }
     }
 
