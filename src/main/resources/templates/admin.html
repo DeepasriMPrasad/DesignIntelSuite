@@ -21,50 +21,52 @@
         <div class="row mb-3">
             <div class="col">
                 <div class="card shadow">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0"><i class="fas fa-database me-2"></i>Database Management</h5>
-                        <div>
-                            <button id="exportDbBtn" class="btn btn-sm btn-warning me-2" onclick="exportToDbFile()">
-                                <i class="fas fa-file-export me-1"></i> Export DB to File
-                            </button>
-                            <button id="clearLeaderboardBtn" class="btn btn-sm btn-danger" 
-                                    onclick="if(confirm('Are you sure you want to clear all leaderboard data? This cannot be undone.')) { clearLeaderboard(); }">
-                                <i class="fas fa-trash-alt me-1"></i> Clear All Entries
-                            </button>
+                    <div class="card-header bg-dark text-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-database me-2"></i>Database Management</h5>
+                            <div class="d-flex">
+                                <button id="exportDbBtn" class="btn btn-warning btn-sm rounded-pill shadow-sm me-2" onclick="exportToDbFile()">
+                                    <i class="fas fa-file-export me-1"></i> Export to File
+                                </button>
+                                <button id="clearLeaderboardBtn" class="btn btn-danger btn-sm rounded-pill shadow-sm" 
+                                        onclick="if(confirm('Are you sure you want to clear all leaderboard data? This cannot be undone.')) { clearLeaderboard(); }">
+                                    <i class="fas fa-trash-alt me-1"></i> Clear All Entries
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
                         <!-- Add New Entry Form -->
-                        <div class="mb-4 p-3 border rounded">
-                            <h5><i class="fas fa-user-plus me-2"></i>Add New Entry</h5>
+                        <div class="mb-4 p-4 border rounded shadow-sm bg-light">
+                            <h5 class="mb-3 pb-2 border-bottom"><i class="fas fa-user-plus me-2 text-primary"></i>Add New Entry</h5>
                             <form id="addEntryForm" onsubmit="return false;">
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label for="userName" class="form-label">User Name</label>
-                                        <input type="text" class="form-control" id="userName" required>
+                                        <label for="userName" class="form-label fw-bold">User Name</label>
+                                        <input type="text" class="form-control shadow-sm" id="userName" placeholder="Enter user name" required>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="iNumber" class="form-label">I-Number</label>
-                                        <input type="text" class="form-control" id="iNumber" required>
+                                        <label for="iNumber" class="form-label fw-bold">I-Number</label>
+                                        <input type="text" class="form-control shadow-sm" id="iNumber" placeholder="Enter I-Number" required>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="score" class="form-label">Score (Correct/Total)</label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" id="correctAnswers" min="0" max="5" required>
+                                        <label for="score" class="form-label fw-bold">Score (Correct/Total)</label>
+                                        <div class="input-group shadow-sm">
+                                            <input type="number" class="form-control" id="correctAnswers" min="0" max="5" required placeholder="Correct">
                                             <span class="input-group-text">/</span>
                                             <input type="number" class="form-control" id="totalQuestions" value="5" readonly>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="timeTaken" class="form-label">Time Taken (seconds)</label>
-                                        <input type="number" class="form-control" id="timeTaken" min="1" required>
+                                        <label for="timeTaken" class="form-label fw-bold">Time (seconds)</label>
+                                        <input type="number" class="form-control shadow-sm" id="timeTaken" min="1" placeholder="Enter time" required>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="completedAt" class="form-label">Completion Date</label>
-                                        <input type="datetime-local" class="form-control" id="completedAt" required>
+                                        <label for="completedAt" class="form-label fw-bold">Completion Date</label>
+                                        <input type="datetime-local" class="form-control shadow-sm" id="completedAt" required>
                                     </div>
                                     <div class="col-md-4 d-flex align-items-end">
-                                        <button type="button" class="btn btn-success w-100" onclick="addEntry()">
+                                        <button type="button" class="btn btn-primary btn-lg rounded-pill shadow w-100" onclick="addEntry()">
                                             <i class="fas fa-plus-circle me-1"></i> Add Entry
                                         </button>
                                     </div>
@@ -166,13 +168,13 @@
     
     <!-- Toast container for notifications -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <i class="fas fa-info-circle me-2 text-primary"></i>
+        <div id="toast" class="toast border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-dark text-white">
+                <i class="fas fa-info-circle me-2"></i>
                 <strong class="me-auto">CXS Quiz System</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <div class="toast-body">
+            <div class="toast-body bg-light">
                 Notification message
             </div>
         </div>

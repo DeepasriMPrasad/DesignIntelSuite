@@ -53,8 +53,8 @@ public class WebController {
      */
     @GetMapping("/leaderboard")
     public String leaderboard(@RequestParam(required = false) String userName, Model model) {
-        // Get top 10 results
-        List<QuizResult> topResults = quizRankingService.getTopResults(10);
+        // Get top 15 results
+        List<QuizResult> topResults = quizRankingService.getTopResults(15);
         model.addAttribute("rankings", topResults);
         
         // Get the total number of participants

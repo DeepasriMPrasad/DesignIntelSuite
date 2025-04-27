@@ -59,18 +59,36 @@ function showToast(message, type = 'info') {
     const toastId = `toast-${Date.now()}`;
     const toast = document.createElement('div');
     toast.id = toastId;
-    toast.className = `toast fade show bg-${type}`;
+    toast.className = `toast fade show border-0 shadow-lg`;
     toast.role = 'alert';
     toast.setAttribute('aria-live', 'assertive');
     toast.setAttribute('aria-atomic', 'true');
     
+    // Set color scheme based on type
+    let headerClass = 'bg-dark text-white';
+    let bodyClass = 'bg-light';
+    let icon = 'fa-info-circle';
+    
+    if (type === 'success') {
+        headerClass = 'bg-success text-white';
+        icon = 'fa-check-circle';
+    } else if (type === 'error') {
+        headerClass = 'bg-danger text-white';
+        icon = 'fa-exclamation-circle';
+        bodyClass = 'bg-light text-danger fw-bold';
+    } else if (type === 'warning') {
+        headerClass = 'bg-warning text-dark';
+        icon = 'fa-exclamation-triangle';
+    }
+    
     // Toast content
     toast.innerHTML = `
-        <div class="toast-header">
-            <strong class="me-auto">Quiz Master</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        <div class="toast-header ${headerClass}">
+            <i class="fas ${icon} me-2"></i>
+            <strong class="me-auto">CXS Quiz System</strong>
+            <button type="button" class="btn-close ${type === 'warning' ? '' : 'btn-close-white'}" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-        <div class="toast-body text-white">${message}</div>
+        <div class="toast-body ${bodyClass}">${message}</div>
     `;
     
     // Add to container
