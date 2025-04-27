@@ -10,7 +10,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 /**
  * Security configuration for SAP BTP deployment.
- * Only activated when the 'prod' profile is active.
+ * Only activated when the 'prod' or 'production' profile is active.
  * 
  * NOTE: Uncomment and configure properly if SAP XSUAA authentication is needed.
  * This is a template that you would need to customize based on your actual
@@ -18,7 +18,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
  */
 @Configuration
 @EnableWebSecurity
-@Profile("prod")
+@Profile({"prod", "production"})
 public class SapSecurityConfig {
 
     /**
@@ -40,7 +40,9 @@ public class SapSecurityConfig {
                 // Public endpoints
                 .requestMatchers("/quizmaster/", "/quizmaster/static/**", 
                                  "/quizmaster/api/quiz/health").permitAll()
-                // Admin endpoints require authentication
+                // Allow admin API endpoints without authentication for development/testing
+                .requestMatchers("/quizmaster/api/quiz/admin/**").permitAll()
+                // Admin web endpoints still require authentication
                 .requestMatchers("/quizmaster/admin/**").authenticated()
                 // API endpoints can be configured based on your needs
                 .requestMatchers("/quizmaster/api/**").permitAll()
