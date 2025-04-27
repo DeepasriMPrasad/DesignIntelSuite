@@ -26,8 +26,11 @@
                             <h5 class="mb-0"><i class="fas fa-database me-2"></i>Database Management</h5>
                             <div class="d-flex">
                                 <button id="exportDbBtn" class="btn btn-warning btn-sm rounded-pill shadow-sm me-2" onclick="exportToDbFile()">
-                                    <i class="fas fa-file-export me-1"></i> Export to File
+                                    <i class="fas fa-file-export me-1"></i> Backup to File
                                 </button>
+                                <a th:href="@{/api/rankings/admin/download/excel}" class="btn btn-success btn-sm rounded-pill shadow-sm me-2">
+                                    <i class="fas fa-file-excel me-1"></i> Export To Excel
+                                </a>
                                 <button id="clearLeaderboardBtn" class="btn btn-danger btn-sm rounded-pill shadow-sm" 
                                         onclick="if(confirm('Are you sure you want to clear all leaderboard data? This cannot be undone.')) { clearLeaderboard(); }">
                                     <i class="fas fa-trash-alt me-1"></i> Clear All Entries
@@ -147,11 +150,8 @@
                             </p>
                         </div>
                     </div>
-                    <div class="card-footer text-muted d-flex justify-content-between align-items-center">
+                    <div class="card-footer text-muted">
                         <p class="mb-0">Total entries: <span th:text="${totalItems}">0</span></p>
-                        <a th:href="@{/api/rankings/admin/download/excel}" class="btn btn-success">
-                            <i class="fas fa-file-excel me-1"></i> Download as Excel
-                        </a>
                     </div>
                 </div>
             </div>
@@ -168,13 +168,13 @@
     
     <!-- Toast container for notifications -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="toast-header">
-                <i class="fas fa-info-circle me-2 text-primary"></i>
+        <div id="toast" class="toast border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-dark text-white">
+                <i class="fas fa-info-circle me-2"></i>
                 <strong class="me-auto">CXS Quiz System</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <div class="toast-body">
+            <div class="toast-body bg-light">
                 Notification message
             </div>
         </div>

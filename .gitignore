@@ -1,0 +1,54 @@
+# Compiled class files and target directory
+/target/
+*.class
+
+# Database files
+*.db
+*.mv.db
+*.trace.db
+/data/
+
+# Backup files
+*_backup_*
+results_backup_*.xlsx
+
+# Log files
+*.log
+/logs/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+
+# Maven
+.flattened-pom.xml
+dependency-reduced-pom.xml
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Excel temporary files
+~$*.xlsx
+
+# Streamlit cache
+.streamlit/
+
+# Package Files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Spring Boot
+spring-test/test-output/

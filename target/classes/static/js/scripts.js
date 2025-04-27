@@ -46,12 +46,20 @@ function showToast(message, type = 'info') {
     }
     
     // Check if the toast container exists, create if not
-    let toastContainer = document.getElementById('toast-container');
+    let containerId = type === 'error' ? 'error-toast-container' : 'toast-container';
+    let toastContainer = document.getElementById(containerId);
     
     if (!toastContainer) {
         toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        toastContainer.id = containerId;
+        
+        // Position error messages at top-center for maximum visibility
+        if (type === 'error') {
+            toastContainer.className = 'toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-4';
+        } else {
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        }
+        
         document.body.appendChild(toastContainer);
     }
     
@@ -59,18 +67,40 @@ function showToast(message, type = 'info') {
     const toastId = `toast-${Date.now()}`;
     const toast = document.createElement('div');
     toast.id = toastId;
-    toast.className = `toast fade show bg-${type}`;
+    toast.className = `toast fade show border-0 shadow-lg`;
     toast.role = 'alert';
     toast.setAttribute('aria-live', 'assertive');
     toast.setAttribute('aria-atomic', 'true');
     
+    // Set color scheme based on type
+    let headerClass = 'bg-dark text-white';
+    let bodyClass = 'bg-light';
+    let icon = 'fa-info-circle';
+    
+    if (type === 'success') {
+        headerClass = 'bg-success text-white';
+        icon = 'fa-check-circle';
+    } else if (type === 'error') {
+        headerClass = 'bg-danger text-white';
+        icon = 'fa-exclamation-circle';
+        bodyClass = 'bg-danger bg-opacity-10 text-danger fw-bold'; // Higher contrast for error messages
+        // Add styling for additional visibility
+        toast.classList.add('border', 'border-danger');
+        toast.style.minWidth = '350px'; // Ensure error messages have enough width
+        toast.style.maxWidth = '80vw';  // But not too wide on mobile
+    } else if (type === 'warning') {
+        headerClass = 'bg-warning text-dark';
+        icon = 'fa-exclamation-triangle';
+    }
+    
     // Toast content
     toast.innerHTML = `
-        <div class="toast-header">
-            <strong class="me-auto">Quiz Master</strong>
-            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        <div class="toast-header ${headerClass}">
+            <i class="fas ${icon} me-2"></i>
+            <strong class="me-auto">CXS Quiz System</strong>
+            <button type="button" class="btn-close ${type === 'warning' ? '' : 'btn-close-white'}" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
-        <div class="toast-body text-white">${message}</div>
+        <div class="toast-body ${bodyClass}">${message}</div>
     `;
     
     // Add to container
@@ -84,7 +114,9 @@ function showToast(message, type = 'info') {
         const bsToast = new bootstrap.Toast(toast);
         bsToast.show();
         
-        // Remove after 5 seconds
+        // Show longer for error messages (8 seconds) than other types (5 seconds)
+        const displayTime = type === 'error' ? 8000 : 5000;
+        
         setTimeout(() => {
             try {
                 bsToast.hide();
@@ -98,7 +130,7 @@ function showToast(message, type = 'info') {
                     console.error('Failed to remove toast:', err);
                 }
             }, 500);
-        }, 5000);
+        }, displayTime);
     } catch (error) {
         console.error('Failed to show toast:', error);
         // Fallback
