@@ -6,7 +6,7 @@ packages = ["maven"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["sh", "-c", "mvn spring-boot:run"]
+run = ["sh", "-c", "./start_foreground.sh"]
 build = ["sh", "-c", "mvn clean install package -DskipTests"]
 
 [workflows]
@@ -57,7 +57,7 @@ agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn spring-boot:run"
+args = "./start_foreground.sh"
 waitForPort = 5000
 
 [[workflows.workflow]]

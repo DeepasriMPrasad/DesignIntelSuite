@@ -1,31 +1,15 @@
-
 #!/bin/bash
 
-# Start Spring Boot application in the background
-echo "Starting Spring Boot application..."
-mvn spring-boot:run &
-SPRING_PID=$!
+# Kill any existing Java processes
+pkill -f "java" || echo "No Java processes to kill"
+sleep 1
 
-# Wait for Spring Boot to be ready
-echo "Waiting for Spring Boot to start (max 60 seconds)..."
-MAX_WAIT=60
-COUNTER=0
-while ! curl -s http://localhost:5000/quizmaster/api/quiz/health > /dev/null && [ $COUNTER -lt $MAX_WAIT ]; do
-  echo "Waiting for Spring Boot... ($COUNTER/$MAX_WAIT)"
-  sleep 1
-  COUNTER=$((COUNTER + 1))
-done
+# Set environment variables
+export SPRING_PROFILES_ACTIVE=dev
 
-if [ $COUNTER -lt $MAX_WAIT ]; then
-  echo "Spring Boot started successfully!"
-else
-  echo "Spring Boot failed to start within $MAX_WAIT seconds"
-  exit 1
-fi
+# Start the application using the built JAR
+echo "Starting QuizMaster application..."
+nohup mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dserver.port=5000" > spring-boot.log 2>&1 &
 
-# Start Streamlit
-echo "Starting Streamlit application..."
-streamlit run app.py --server.port 5001 --server.address 0.0.0.0
-
-# Cleanup when script exits
-trap "kill $SPRING_PID" EXIT
+echo "Application started in background. Check spring-boot.log for details."
+echo "The application should be available at http://localhost:5000/quizmaster"

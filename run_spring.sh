@@ -6,51 +6,39 @@ pkill -f java || echo "No Java processes to clean up"
 pkill -f mvn || echo "No Maven processes to clean up"
 sleep 2
 
-echo "Starting Spring Boot application with optimization..."
-# Set strict memory limits
-export MAVEN_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication"
-export _JAVA_OPTIONS="-Xms256m -Xmx512m -XX:+UseG1GC -Dspring.config.location=classpath:/application.properties"
+# Remove any lock files or temporary files that might cause issues
+rm -f ./*.lock 2>/dev/null
+rm -f ./quizmaster.log 2>/dev/null
 
-# Use production mode (disable devtools)
+# Set strict but reasonable memory limits
+echo "Starting Spring Boot application with optimized settings..."
+export MAVEN_OPTS="-Xms256m -Xmx1024m"
+export _JAVA_OPTIONS="-Xms256m -Xmx1024m -Dspring.config.location=classpath:/application.properties"
+
+# Use production mode with better compatibility
 export SPRING_PROFILES_ACTIVE=production
 
-# Run with JVM optimizations for faster startup
-echo "Running with optimized JVM settings..."
-mvn spring-boot:run -Dspring-boot.run.jvmArguments="-XX:TieredStopAtLevel=1 -Djava.security.egd=file:/dev/./urandom" &
+# Fix any potential database locks by making sure the database is properly closed
+if [ -f "./data/quizmaster.mv.db" ]; then
+  echo "Ensuring database is properly closed..."
+  java -cp ./target/quizmaster.jar org.h2.tools.Shell -url jdbc:h2:file:./data/quizmaster -user sa -password password -sql "SHUTDOWN COMPACT" > /dev/null 2>&1 || echo "No need to shut down database"
+  echo "Database prepared."
+fi
+
+# Run the application directly using java instead of Maven
+echo "Starting Spring Boot application..."
+java -jar target/quizmaster.jar --server.port=5000 &
 
 # Store the PID
 SPRING_PID=$!
 
-# Start a background process to indicate that the app is starting
-(
-  echo "Starting Spring Boot (this may take 20-30 seconds)..."
-  for i in {1..6}; do
-    echo -n "."
-    sleep 5
-  done
-) &
-LOADING_PID=$!
-
-# Wait for the application to start - increased timeout for first start
-echo "Waiting for Spring Boot to start (max 120 seconds)..."
-MAX_WAIT=120
+# Wait for the application to start with a reliable health check
+echo "Waiting for Spring Boot to start..."
+MAX_WAIT=60
 COUNTER=0
 while [ $COUNTER -lt $MAX_WAIT ]; do
-  # Check if the port is open OR if the app has started by checking the logs
-  if curl -s http://localhost:5000/quizmaster/api/quiz/health > /dev/null 2>&1 || 
-     grep -q "Started QuizMasterApplication" quizmaster.log 2>/dev/null; then
-    
-    # Kill the loading indicator
-    kill $LOADING_PID 2>/dev/null
-    
+  if curl -s http://localhost:5000/quizmaster/api/quiz/health > /dev/null 2>&1; then
     echo "✅ Spring Boot started successfully on port 5000!"
-    
-    # The app is running, wait to make sure port 5000 is actually open
-    sleep 5
-    
-    # Exit successfully - the actual server is already running on port 5000
-    # The workflow system should detect it automatically
-    echo "Application is running and serving port 5000"
     
     # Stay alive to keep the process running
     while true; do
