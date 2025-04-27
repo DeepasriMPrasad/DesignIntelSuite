@@ -2,7 +2,8 @@ package com.quizmaster.service.impl;
 
 import com.quizmaster.model.QuizResult;
 import com.quizmaster.service.QuizResultExporter;
-import lombok.extern.slf4j.Slf4j;
+import com.quizmaster.util.LoggingUtils;
+import org.slf4j.Logger;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,9 +25,9 @@ import java.util.List;
  * Service implementation for exporting quiz results to Excel
  */
 @Service
-@Slf4j
 public class ExcelQuizResultExporterImpl implements QuizResultExporter {
 
+    private static final Logger log = LoggingUtils.getLogger(ExcelQuizResultExporterImpl.class);
     private static final String[] HEADERS = {"ID", "User Name", "I-Number", "Score", "Total Questions", 
                                          "Correct Answers", "Duration (sec)", "Completion Date"};
     private static final String SHEET_NAME = "Quiz Results";

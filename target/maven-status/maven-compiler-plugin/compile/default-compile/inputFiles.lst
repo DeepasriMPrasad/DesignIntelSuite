@@ -20,6 +20,7 @@
 /home/runner/workspace/src/main/java/com/quizmaster/service/impl/JpaQuizResultRecorder.java
 /home/runner/workspace/src/main/java/com/quizmaster/util/ExcelQuestionLoader.java
 /home/runner/workspace/src/main/java/com/quizmaster/model/QuizSession.java
+/home/runner/workspace/src/main/java/com/quizmaster/util/LoggingUtils.java
 /home/runner/workspace/src/main/java/com/quizmaster/repository/impl/QuizResultRepository.java
 /home/runner/workspace/src/main/java/com/quizmaster/service/QuizService.java
 /home/runner/workspace/src/main/java/com/quizmaster/util/ExcelReportGenerator.java
@@ -40,6 +41,7 @@
 /home/runner/workspace/src/main/java/com/quizmaster/service/QuizResultRecorder.java
 /home/runner/workspace/src/main/java/com/quizmaster/config/SapSecurityConfig.java
 /home/runner/workspace/src/main/java/com/quizmaster/service/impl/QuizServiceImpl.java
+/home/runner/workspace/src/main/java/com/quizmaster/config/LogDirectoryInitializer.java
 /home/runner/workspace/src/main/java/com/quizmaster/controller/QuestionEditorController.java
 /home/runner/workspace/src/main/java/com/quizmaster/service/impl/ExcelQuizResultExporterImpl.java
 /home/runner/workspace/src/main/java/com/quizmaster/controller/WebController.java

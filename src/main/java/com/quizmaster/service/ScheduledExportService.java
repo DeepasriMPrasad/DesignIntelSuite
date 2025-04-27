@@ -1,7 +1,8 @@
 package com.quizmaster.service;
 
 import com.quizmaster.model.QuizResult;
-import lombok.extern.slf4j.Slf4j;
+import com.quizmaster.util.LoggingUtils;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,9 +14,10 @@ import java.util.List;
  * Service to periodically export quiz results to Excel
  */
 @Service
-@Slf4j
 public class ScheduledExportService {
 
+    private static final Logger log = LoggingUtils.getLogger(ScheduledExportService.class);
+    
     private final QuizRankingService quizRankingService;
     private final QuizResultExporter quizResultExporter;
     
@@ -46,19 +48,20 @@ public class ScheduledExportService {
      * @return The number of results exported, or -1 if an error occurred
      */
     public int exportResultsNow() {
-        log.info("Running manual export of quiz results to Excel");
+        LoggingUtils.logEvent(log, "ExportStart", "Manual export of quiz results to Excel initiated");
         try {
             List<QuizResult> results = quizRankingService.getAllResults();
             if (results.isEmpty()) {
-                log.info("No quiz results to export");
+                LoggingUtils.logEvent(log, "ExportSkipped", "No quiz results to export");
                 return 0;
             }
             
+            LoggingUtils.logDatabaseOperation(log, "SELECT", "QuizResults", "Retrieved " + results.size() + " results for export");
             quizResultExporter.exportResults(results);
-            log.info("Successfully exported {} quiz results to Excel", results.size());
+            LoggingUtils.logEvent(log, "ExportSuccess", "Successfully exported " + results.size() + " quiz results to Excel");
             return results.size();
         } catch (Exception e) {
-            log.error("Error during export of quiz results", e);
+            LoggingUtils.logError(log, "Failed to export quiz results to Excel", e);
             return -1;
         }
     }

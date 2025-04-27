@@ -56,20 +56,27 @@ public class JpaQuizRankingService implements QuizRankingService {
         log.info("Importing quiz results from Excel on startup");
         try {
             List<QuizResult> excelResults = quizResultExporter.importResults();
+            log.info("Found {} quiz results in Excel file for import", excelResults.size());
+            
             if (excelResults.isEmpty()) {
                 log.info("No quiz results found in Excel file for import");
                 return;
             }
+            
+            int importedCount = 0;
+            int skippedCount = 0;
             
             // For each result from Excel, check if it already exists in the database
             for (QuizResult result : excelResults) {
                 if (result.getId() != null) {
                     if (!quizResultRepository.existsById(result.getId())) {
                         quizResultRepository.save(result);
-                        log.debug("Imported quiz result for user: {} with ID: {}", 
+                        importedCount++;
+                        log.info("Imported quiz result for user: {} with ID: {}", 
                                 result.getUserName(), result.getId());
                     } else {
-                        log.debug("Quiz result with ID: {} already exists, skipping import", 
+                        skippedCount++;
+                        log.info("Quiz result with ID: {} already exists, skipping import", 
                                 result.getId());
                     }
                 } else {
@@ -80,16 +87,20 @@ public class JpaQuizRankingService implements QuizRankingService {
                                     r.getUserName().equals(result.getUserName()));
                     
                     if (!exists) {
-                        quizResultRepository.save(result);
-                        log.debug("Imported new quiz result for user: {}", result.getUserName());
+                        QuizResult saved = quizResultRepository.save(result);
+                        importedCount++;
+                        log.info("Imported new quiz result for user: {} with assigned ID: {}", 
+                                result.getUserName(), saved.getId());
                     } else {
-                        log.debug("Quiz result for user: {} with I-Number: {} already exists, skipping import", 
+                        skippedCount++;
+                        log.info("Quiz result for user: {} with I-Number: {} already exists, skipping import", 
                                 result.getUserName(), result.getINumber());
                     }
                 }
             }
             
-            log.info("Successfully imported quiz results from Excel on startup");
+            log.info("Excel import complete: {} imported, {} skipped", importedCount, skippedCount);
+            log.info("Total records in database after import: {}", quizResultRepository.count());
         } catch (Exception e) {
             log.error("Error importing quiz results from Excel on startup", e);
         }
