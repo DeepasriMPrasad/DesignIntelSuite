@@ -68,11 +68,6 @@ public class JpaQuizRankingService implements QuizRankingService {
             // First, export existing DB data to db_results.xlsx before we potentially overwrite it
             exportExistingDbToSpecialFile();
             
-            // Clear the database after backing up to db_results.xlsx
-            // This ensures we have a clean state before importing from Excel
-            log.info("Clearing database before importing from Excel");
-            quizResultRepository.deleteAll();
-            
             // Load results from Excel file
             List<QuizResult> excelResults = quizResultExporter.importResults();
             log.info("Found {} quiz results in Excel file for import", excelResults.size());
@@ -88,20 +83,64 @@ public class JpaQuizRankingService implements QuizRankingService {
                 return;
             }
             
-            // Import all results from Excel
-            int importedCount = 0;
-            for (QuizResult result : excelResults) {
-                try {
-                    QuizResult saved = quizResultRepository.save(result);
-                    importedCount++;
-                    log.debug("Imported quiz result for user: {} with ID: {}", 
-                            result.getUserName(), saved.getId());
-                } catch (Exception e) {
-                    log.error("Failed to import result for user: {}", result.getUserName(), e);
+            // Check if all Excel entries already exist in the database by I-Number
+            List<QuizResult> dbResults = quizResultRepository.findAll();
+            boolean hasNewEntries = false;
+            boolean countMismatch = excelResults.size() != dbResults.size();
+            
+            if (countMismatch) {
+                log.info("Count mismatch: Excel has {} entries, database has {} entries", 
+                         excelResults.size(), dbResults.size());
+            }
+            
+            // Collect all I-Numbers from database
+            List<String> dbINumbers = dbResults.stream()
+                .filter(result -> result.getINumber() != null && !result.getINumber().isEmpty())
+                .map(QuizResult::getINumber)
+                .collect(Collectors.toList());
+                
+            log.info("Found {} I-Numbers in database", dbINumbers.size());
+            
+            // Check if any Excel entry has an I-Number not present in the database
+            for (QuizResult excelResult : excelResults) {
+                String iNumber = excelResult.getINumber();
+                if (iNumber != null && !iNumber.isEmpty() && !dbINumbers.contains(iNumber)) {
+                    log.info("Found new I-Number in Excel that is not in database: {}", iNumber);
+                    hasNewEntries = true;
+                    break;
                 }
             }
             
-            log.info("Excel import complete: {} imported from Excel", importedCount);
+            // Declare importedCount outside the if-else block
+            int importedCount = 0;
+            
+            if (hasNewEntries || countMismatch) {
+                // Clear the database if new entries were found or if counts don't match
+                String reason = hasNewEntries ? "new I-Numbers found" : "count mismatch";
+                log.info("Clearing database before importing due to: {}", reason);
+                quizResultRepository.deleteAll();
+                
+                // Import all results from Excel
+                for (QuizResult result : excelResults) {
+                    try {
+                        QuizResult saved = quizResultRepository.save(result);
+                        importedCount++;
+                        log.debug("Imported quiz result for user: {} with ID: {}", 
+                                result.getUserName(), saved.getId());
+                    } catch (Exception e) {
+                        log.error("Failed to import result for user: {}", result.getUserName(), e);
+                    }
+                }
+                log.info("Excel import complete: {} imported from Excel", importedCount);
+            } else {
+                log.info("All I-Numbers in Excel file already exist in database and counts match - skipping import");
+                // Export existing database records to Excel to ensure sync
+                if (!dbResults.isEmpty()) {
+                    log.info("Keeping existing {} database records and ensuring Excel is in sync", dbResults.size());
+                    quizResultExporter.exportResults(dbResults, ExportTrigger.STARTUP);
+                }
+            }
+            
             log.info("Total records in database after import: {}", quizResultRepository.count());
             
         } catch (Exception e) {
