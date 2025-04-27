@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -238,11 +239,43 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
         return results;
     }
     
+    @Override
+    public boolean createBackup() throws IOException {
+        String filePath = getFilePath();
+        File sourceFile = new File(filePath);
+        
+        if (!sourceFile.exists()) {
+            log.info("No Excel file to back up at: {}", filePath);
+            return false;
+        }
+        
+        // Create backup file name with timestamp
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+        String timestamp = LocalDateTime.now().format(formatter);
+        String backupFileName = filePath.replace(".xlsx", "_backup_" + timestamp + ".xlsx");
+        
+        try {
+            Path sourcePath = sourceFile.toPath();
+            Path backupPath = Paths.get(backupFileName);
+            
+            // Copy the file with replace if exists option
+            Files.copy(sourcePath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+            log.info("Successfully created backup of Excel file at: {}", backupFileName);
+            return true;
+        } catch (IOException e) {
+            log.error("Failed to create backup of Excel file", e);
+            throw e;
+        }
+    }
+    
     private String getFilePath() throws IOException {
         String path = resultsExcelPath.replace("file:", "");
         Path filePath = Paths.get(path);
-        if (!Files.exists(filePath.getParent())) {
-            Files.createDirectories(filePath.getParent());
+        
+        // Handle parent directory to prevent NPE with getParent()
+        Path parent = filePath.getParent();
+        if (parent != null && !Files.exists(parent)) {
+            Files.createDirectories(parent);
         }
         return path;
     }

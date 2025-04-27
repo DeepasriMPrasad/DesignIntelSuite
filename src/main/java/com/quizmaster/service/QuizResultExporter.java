@@ -2,6 +2,7 @@ package com.quizmaster.service;
 
 import com.quizmaster.model.QuizResult;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -22,4 +23,12 @@ public interface QuizResultExporter {
      * @return List of imported quiz results
      */
     List<QuizResult> importResults();
+    
+    /**
+     * Create a backup of the results file before performing operations
+     * 
+     * @return true if backup was created successfully, false otherwise
+     * @throws IOException if an I/O error occurs
+     */
+    boolean createBackup() throws IOException;
 }

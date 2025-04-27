@@ -10,7 +10,7 @@ run = ["sh", "-c", "mvn spring-boot:run"]
 build = ["sh", "-c", "mvn clean install package -DskipTests"]
 
 [workflows]
-runButton = "Spring Boot Application"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -48,9 +48,6 @@ author = "agent"
 agentRequireRestartOnSave = false
 
 [[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "mvn spring-boot:run"
 waitForPort = 5000
@@ -79,7 +76,3 @@ externalPort = 3001
 [[ports]]
 localPort = 8000
 externalPort = 80
-
-[[ports]]
-localPort = 45297
-externalPort = 3000
