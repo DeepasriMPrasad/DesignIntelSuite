@@ -46,10 +46,11 @@ public class JpaQuizRankingService implements QuizRankingService {
     /**
      * Import quiz results from Excel file on application startup.
      * The strategy is to prioritize Excel data over DB data during startup:
-     * 1. Create a backup of the Excel file
-     * 2. Clear the database
-     * 3. Import all data from Excel
-     * 4. If Excel import fails, keep existing DB data
+     * 1. Clear the database
+     * 2. Import all data from Excel
+     * 3. If Excel import fails, keep existing DB data
+     * 
+     * This is now done as an @Async operation to speed up application startup
      */
     @PostConstruct
     public void importResultsOnStartup() {
@@ -58,54 +59,57 @@ public class JpaQuizRankingService implements QuizRankingService {
             return;
         }
         
-        log.info("Synchronizing quiz results with Excel on startup");
+        log.info("Starting Excel synchronization in background");
         
+        // Start a background thread to do the import to speed up application startup
+        // This will allow the application to start accepting requests immediately
+        new Thread(() -> {
+            try {
+                log.info("Synchronizing quiz results with Excel on startup (background thread)");
+                
+                // Load results from Excel file
+                List<QuizResult> excelResults = quizResultExporter.importResults();
+                log.info("Found {} quiz results in Excel file for import", excelResults.size());
+                
+                if (excelResults.isEmpty()) {
+                    log.info("No quiz results found in Excel file for import, keeping database records");
+                    // Export existing database records to Excel to ensure sync
+                    List<QuizResult> dbResults = quizResultRepository.findAll();
+                    if (!dbResults.isEmpty()) {
+                        log.info("Exporting {} existing database records to Excel", dbResults.size());
+                        quizResultExporter.exportResults(dbResults);
+                    }
+                    return;
+                }
+                
+                // Import all results from Excel
+                int importedCount = 0;
+                for (QuizResult result : excelResults) {
+                    try {
+                        QuizResult saved = quizResultRepository.save(result);
+                        importedCount++;
+                        log.debug("Imported quiz result for user: {} with ID: {}", 
+                                result.getUserName(), saved.getId());
+                    } catch (Exception e) {
+                        log.error("Failed to import result for user: {}", result.getUserName(), e);
+                    }
+                }
+                
+                log.info("Excel import complete: {} imported from Excel", importedCount);
+                log.info("Total records in database after import: {}", quizResultRepository.count());
+                
+            } catch (Exception e) {
+                log.error("Error during Excel/DB synchronization on startup", e);
+                log.warn("Continuing with existing database records since Excel synchronization failed");
+            }
+        }).start();
+        
+        // Register a shutdown hook to ensure results are saved on application exit
+        // This is only registered once when the service is created
         try {
-            // Attempt to create backup of Excel file first
-            quizResultExporter.createBackup();
-            
-            // Load results from Excel file
-            List<QuizResult> excelResults = quizResultExporter.importResults();
-            log.info("Found {} quiz results in Excel file for import", excelResults.size());
-            
-            if (excelResults.isEmpty()) {
-                log.info("No quiz results found in Excel file for import, keeping database records");
-                // Export existing database records to Excel to ensure sync
-                List<QuizResult> dbResults = quizResultRepository.findAll();
-                if (!dbResults.isEmpty()) {
-                    log.info("Exporting {} existing database records to Excel", dbResults.size());
-                    quizResultExporter.exportResults(dbResults);
-                }
-                return;
-            }
-            
-            // Clear the database before importing from Excel to avoid duplicates
-            long existingRecords = quizResultRepository.count();
-            if (existingRecords > 0) {
-                log.info("Clearing {} existing records from database before import", existingRecords);
-                quizResultRepository.deleteAll();
-            }
-            
-            // Import all results from Excel
-            int importedCount = 0;
-            for (QuizResult result : excelResults) {
-                try {
-                    QuizResult saved = quizResultRepository.save(result);
-                    importedCount++;
-                    log.debug("Imported quiz result for user: {} with ID: {}", 
-                            result.getUserName(), saved.getId());
-                } catch (Exception e) {
-                    log.error("Failed to import result for user: {}", result.getUserName(), e);
-                }
-            }
-            
-            log.info("Excel import complete: {} imported from Excel", importedCount);
-            log.info("Total records in database after import: {}", quizResultRepository.count());
-            
-            // Register shutdown hook to ensure data is exported on application shutdown
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                log.info("Application shutting down, exporting quiz results to Excel");
                 try {
+                    log.info("Application shutting down, exporting quiz results to Excel");
                     List<QuizResult> finalResults = quizResultRepository.findAll();
                     quizResultExporter.exportResults(finalResults);
                     log.info("Successfully exported {} quiz results to Excel on shutdown", finalResults.size());
@@ -113,10 +117,9 @@ public class JpaQuizRankingService implements QuizRankingService {
                     log.error("Error exporting quiz results to Excel on shutdown", e);
                 }
             }));
-            
-        } catch (Exception e) {
-            log.error("Error during Excel/DB synchronization on startup", e);
-            log.warn("Continuing with existing database records since Excel synchronization failed");
+        } catch (IllegalStateException e) {
+            // This happens if shutdown is already in progress, which is fine to ignore
+            log.debug("Could not add shutdown hook - shutdown may already be in progress");
         }
     }
 

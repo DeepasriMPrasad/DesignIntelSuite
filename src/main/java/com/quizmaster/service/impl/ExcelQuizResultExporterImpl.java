@@ -42,6 +42,9 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
             String filePath = getFilePath();
             log.info("Exporting {} quiz results to Excel file: {}", results.size(), filePath);
             
+            // Create backup of the existing file before modifications
+            createBackup();
+            
             Workbook workbook;
             File file = new File(filePath);
             
@@ -239,22 +242,26 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
         return results;
     }
     
-    @Override
-    public boolean createBackup() throws IOException {
-        String filePath = getFilePath();
-        File sourceFile = new File(filePath);
-        
-        if (!sourceFile.exists()) {
-            log.info("No Excel file to back up at: {}", filePath);
-            return false;
-        }
-        
-        // Create backup file name with timestamp
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-        String timestamp = LocalDateTime.now().format(formatter);
-        String backupFileName = filePath.replace(".xlsx", "_backup_" + timestamp + ".xlsx");
-        
+    /**
+     * Creates a backup of the Excel file before making changes
+     * 
+     * @return true if backup succeeded, false otherwise
+     */
+    private boolean createBackup() {
         try {
+            String filePath = getFilePath();
+            File sourceFile = new File(filePath);
+            
+            if (!sourceFile.exists()) {
+                log.info("No Excel file to back up at: {}", filePath);
+                return false;
+            }
+            
+            // Create backup file name with timestamp
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+            String timestamp = LocalDateTime.now().format(formatter);
+            String backupFileName = filePath.replace(".xlsx", "_backup_" + timestamp + ".xlsx");
+            
             Path sourcePath = sourceFile.toPath();
             Path backupPath = Paths.get(backupFileName);
             
@@ -264,7 +271,7 @@ public class ExcelQuizResultExporterImpl implements QuizResultExporter {
             return true;
         } catch (IOException e) {
             log.error("Failed to create backup of Excel file", e);
-            throw e;
+            return false;
         }
     }
     
